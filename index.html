@@ -67,7 +67,7 @@
             width: 100%;
             height: 1px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            opacity: 0.1;
+            opacity: 0.15;
             animation: scanMove 8s linear infinite;
             z-index: 10;
             pointer-events: none;
@@ -86,6 +86,7 @@
             letter-spacing: 3px;
             text-align: center;
             transition: all 0.3s;
+            cursor: pointer;
         }
         .btn-luxury:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
 
@@ -119,25 +120,56 @@
             stroke-dasharray: 2000;
             stroke-dashoffset: 2000;
             filter: drop-shadow(0 0 4px var(--gold));
-            opacity: 0.7;
+            opacity: 0.5;
         }
-        .flight-anim { animation: flyPath 2.8s forwards cubic-bezier(0.45, 0.05, 0.55, 0.95); }
+        .flight-anim { animation: flyPath 2.6s forwards cubic-bezier(0.45, 0.05, 0.55, 0.95); }
         @keyframes flyPath { to { stroke-dashoffset: 0; } }
 
+        .paper-plane {
+            fill: #fff;
+            filter: drop-shadow(0 0 8px #fff);
+            offset-rotate: auto;
+            animation: airplaneMove 2.6s forwards cubic-bezier(0.45, 0.05, 0.55, 0.95);
+        }
+        @keyframes airplaneMove {
+            from { offset-distance: 0%; }
+            to { offset-distance: 100%; }
+        }
+
+        /* 路线列表卡片优化 */
         .route-card {
             width: 100%;
-            padding: 20px;
-            border-radius: 1rem;
-            background: rgba(255, 255, 255, 0.02);
+            padding: 10px;
+            border-radius: 1.2rem;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
+            transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
         }
-        .route-card.locked { opacity: 0.25; filter: grayscale(1); }
-        .route-card.active { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); }
-        .route-id { font-family: 'Noto Serif SC', serif; font-weight: 900; opacity: 0.2; font-size: 20px; margin-right: 15px; }
+        .route-card.locked { opacity: 0.3; filter: grayscale(1) blur(0.5px); }
+        .route-card.active { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.08); transform: translateX(4px); }
+        .route-card.completed { border-color: var(--accent); background: rgba(45, 212, 191, 0.05); }
+
+        .route-thumb {
+            width: 64px;
+            height: 64px;
+            border-radius: 0.8rem;
+            overflow: hidden;
+            flex-shrink: 0;
+            margin-right: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .route-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 修正：由 crop 改为 cover */
+            transition: transform 0.8s;
+        }
+        .route-card.active .route-thumb img { transform: scale(1.1); }
+
+        .route-content { flex: 1; min-width: 0; padding-right: 8px; }
 
         #exploration-overlay {
             display: none;
@@ -173,6 +205,30 @@
             letter-spacing: 1px;
             cursor: pointer;
         }
+
+        .video-remark {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.25);
+            margin-top: 20px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .video-remark::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -188,7 +244,7 @@
             <h1 class="serif text-4xl mb-10 leading-tight tracking-tighter text-white font-bold">跑遍全世界</h1>
             <div class="space-y-6 text-gray-400 text-sm leading-relaxed mb-14 px-2">
                 <p>鼠标在无穷的像素间迁徙，却从未触碰到真实的晚风。</p>
-                <p class="text-white opacity-90">你突然想起，十岁年指尖划过的地球仪，那里装载过一整个星辰大海。</p>
+                <p class="text-white opacity-90">你突然想起，十岁那年指尖划过的地球仪，那里装载过一整个星辰大海。</p>
                 <p>那些被琐事埋没的梦，一站接一站，跑回来。</p>
             </div>
             <button onclick="toStep(2)" class="btn-luxury w-full">唤醒沉睡的步伐</button>
@@ -259,7 +315,7 @@
         </div>
     </section>
 
-    <!-- STEP 5: 路线列表 -->
+    <!-- STEP 5: 路线挑战列表 -->
     <section id="step-5" class="scene p-6 bg-black">
         <div class="w-full h-full flex flex-col relative pt-16">
             <div class="absolute top-4 left-0"><button onclick="toStep(3)" class="btn-back"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>返回地图</button></div>
@@ -270,15 +326,18 @@
                 </div>
                 <div class="text-teal-400 text-xl font-black" id="route-stat">0 / 5</div>
             </header>
-            <div id="route-cards-container" class="flex-1 flex flex-col overflow-y-auto pb-6 no-scrollbar pr-1"></div>
+            <!-- 修复：增加了 padding-bottom 确保最后一条显示完 -->
+            <div id="route-cards-container" class="flex-1 flex flex-col overflow-y-auto pb-24 no-scrollbar pr-1"></div>
         </div>
+
+        <!-- 路线实景探索覆盖层 -->
         <div id="exploration-overlay">
             <nav class="absolute top-6 w-full px-6 flex justify-between items-center z-50">
                 <button onclick="closeExploration()" class="text-[9px] text-white/40 uppercase tracking-widest border border-white/10 px-3 py-1.5 rounded-full">放弃</button>
                 <div id="explore-route-name" class="serif text-sm text-white italic"></div>
             </nav>
-            <div class="relative z-10 text-center w-full max-w-xs">
-                <div class="mb-14">
+            <div class="relative z-10 text-center w-full max-w-xs flex flex-col items-center">
+                <div class="mb-14 w-full">
                     <div class="text-6xl font-black text-teal-400 mb-4 tracking-tighter" id="explore-progress-text">0%</div>
                     <div class="w-full h-1 bg-white/10 rounded-full overflow-hidden">
                         <div id="explore-progress-bar" class="h-full bg-teal-400 transition-all duration-300" style="width: 0%"></div>
@@ -287,13 +346,13 @@
                 <button id="tap-run-btn" class="w-40 h-40 rounded-full border border-white/10 flex items-center justify-center mx-auto bg-white/5 active:bg-white/10 active:scale-90 transition-all shadow-2xl">
                     <span class="text-teal-400 font-black text-4xl">RUN</span>
                 </button>
+                <div class="video-remark">正在同步播放目的地实景视频</div>
             </div>
         </div>
     </section>
 
-    <!-- STEP 6: 灵魂护照 & 下一站预告 -->
+    <!-- STEP 6: 灵魂护照 -->
     <section id="step-6" class="scene items-center justify-center p-6 bg-black/99 overflow-y-auto">
-        <!-- 护照卡片 -->
         <div class="glass-panel w-full max-w-xs p-10 animate__animated animate__zoomIn mb-8 shrink-0">
             <div class="flex justify-between items-start mb-10">
                 <span class="serif font-black italic text-2xl text-white">PASSPORT</span>
@@ -306,7 +365,6 @@
             </div>
         </div>
 
-        <!-- 下一站预告 -->
         <div id="next-city-preview" class="w-full max-w-xs mb-10 text-center animate__animated animate__fadeInUp">
             <div class="flex items-center justify-center gap-2 mb-3">
                 <div class="h-px w-8 bg-gradient-to-r from-transparent to-teal-500/50"></div>
@@ -322,20 +380,47 @@
 
     <script>
         const storyChain = [
-            { id: 'Hangzhou', name: '杭州', x: 800, y: 195, desc: '凌晨三点的钱江新城，与其在PPT里虚构未来，不如去西湖烟雨中找回本色。当断桥晨曦刺破薄雾，那个课本边缘画满航线的孩子，正等你重新出发。', routes: ['西湖：柳浪闻莺的千年呼吸', '龙井：云雾深处的龙踪拾遗', '灵隐：空山梵呗的灵魂禅步', '运河：流向繁华的旧梦长廊', '良渚：五千年文明的最初心跳'] },
-            { id: 'Beijing', name: '北京', x: 790, y: 155, desc: '从中轴线的红墙出发，跨越千年的时空。这里的风吹过紫禁城，仿佛在告诉你：世界很大，不止方寸之间。', routes: ['中轴：皇城脊梁的威仪巡游', '故宫：斜阳下的红墙金瓦碎片', '昆明湖：皇家园林的晚风画卷', '万里：长城之上的骨骼与梦想', '什刹海：胡同里的市井烟火梦'] },
-            { id: 'Seoul', name: '首尔', x: 820, y: 160, desc: '汉江的水映着现代霓虹。从古老的宫殿到动感的街头，你正踏入亚洲最富张力的心跳地带。', routes: ['汉江：晓月映照下的流感霓虹', '景福宫：岁月缝隙里的王朝叙事', '北村：韩屋脊岭间的古老呼吸', '南山：锁住永恒的塔尖光芒', '江南：全球节奏的最强鼓点'] },
-            { id: 'Tokyo', name: '东京', x: 860, y: 180, desc: '涩谷十字路口的极速心跳，与银座的秩序感交织。霓虹熄灭后，我们将跨越海峡。', routes: ['涩谷：亿万人潮流中的孤独漂流', '银座：极致物欲后的审美秩序', '上野：在落樱中寻找片刻禅机', '新宿：24小时不眠的迷宫之眼', '千代田：皇居护城河的静谧屏息'] },
-            { id: 'Taipei', name: '台北', x: 815, y: 235, desc: '101的摩天高度下藏着巷弄里的温润。稍作停歇，南下的热带海风已经在呼唤你。', routes: ['101：直抵云端的数字图腾', '士林：午夜胃袋的温情救赎', '淡水：落日余晖里的琴弦慢板', '九份：山径灯火里的悲情怀旧', '象山：俯瞰整座盆地的灵魂广角'] },
-            { id: 'Singapore', name: '新加坡', x: 765, y: 345, desc: '花园城市的热带森林，是文明与自然共生的奇迹。跨越赤道，去拥抱更辽阔的大洋。', routes: ['滨海湾：在超级树下仰望赛博森林', '圣淘沙：热带浪尖的极速快感', '牛车水：跨越海洋的祖辈基因', '克拉码头：在霓虹里微醺的河畔', '鱼尾狮：记录每一个抵达的注视'] },
-            { id: 'Sydney', name: '悉尼', x: 840, y: 445, desc: '歌剧院的风帆正被南半球的海风吹动。穿过太平洋的浩渺，去往狂欢的南美海岸。', routes: ['歌剧院：白色风帆下的艺术共鸣', '海港大桥：攀登城市的钢铁脊梁', '邦迪：在南太平洋的浪尖飞行', '达令港：海港暮色里的漫步诗行', '岩石区：在砂岩建筑里触摸殖民记忆'] },
-            { id: 'Rio', name: '里约', x: 280, y: 360, desc: '科科瓦多山的基督像俯瞰着奔放的舞步。从萨巴的节奏中抽离，一路向北。', routes: ['基督山：张开双臂的终极慰藉', '面包山：俯瞰瓜纳巴拉湾的视角', '萨巴：在每一个街头疯狂旋转', '科帕卡巴纳：4公里海岸的阳光崇拜', '贫民窟：色彩斑斓的真实生存志'] },
-            { id: 'NewYork', name: '纽约', x: 235, y: 145, desc: '时代广场的灯火永不熄灭。在摩天大楼的丛林里奔跑后，我们将去往风之城。', routes: ['时代广场：全球注意力的爆炸核心', '中央公园：钢铁丛林里的翡翠呼吸', '布鲁克林：在铁索桥上告别曼哈顿', '华尔街：金钱帝国里的步履匆匆', '自由岛：在火炬下寻找开拓者之魂'] },
-            { id: 'Chicago', name: '芝加哥', x: 205, y: 140, desc: '风之城的云门镜像里，编织出硬核的都市梦。穿过内陆，去往好莱坞。', routes: ['云门：在“豆子”里发现扭曲的世界', '海军码头：密歇根湖畔的摩天轮怀旧', '壮丽一英里：建筑教科书里的垂直竞速', '威利斯：在103层透明地板上凌空', '林肯公园：在湖滨大道听风的回响'] },
-            { id: 'LosAngeles', name: '洛杉矶', x: 145, y: 185, desc: '太平洋的巨浪拍打着星光大道。现在，我们将横跨大西洋，开启欧洲的古老诗篇。', routes: ['好莱坞：星光大道上的成名幻梦', '圣莫尼卡：66号公路终点的摩天轮', '比弗利：极致奢华背后的棕榈树影', '格里菲斯：在洛杉矶星空下与城市对视', '斯台普斯：曼巴精神的图腾领地'] },
-            { id: 'London', name: '伦敦', x: 470, y: 110, desc: '泰晤士河的雾气笼罩着大本钟。从这里的绅士步伐，转入地中海暖阳。', routes: ['大本钟：准时敲响的历史回音', '伦敦塔桥：泰晤士河上的钢铁升降', '海德公园：皇室领地里的自由奔跑', '西区：在剧院魅影中沉入漫长黑夜', '国王十字：前往霍格沃茨的9¾站台'] },
-            { id: 'Rome', name: '罗马', x: 495, y: 155, desc: '条条大路通罗马。在古竞技场的残垣下感受澎湃历史。最后，我们将去往世界尽头。', routes: ['斗兽场：帝国废墟里的勇敢者之魂', '万神殿：圆顶之下两千年的光束', '许愿池：投下一枚重返永恒的硬币', '圣彼得：在伟大的穹顶下屏住呼吸', '台伯河：在古桥上等待罗马之光'] },
-            { id: 'CapeTown', name: '开普敦', x: 520, y: 440, desc: '桌山的云海交汇于大西洋。当你抵达这里，你才发现，那个坐在格子间里做梦的孩子，从未离开。', routes: ['桌山：上帝的餐桌与流动的云海', '好望角：大西洋与印度洋的惊涛交汇', '罗本岛：曼德拉自由之梦的起点', '彩色屋：Bo-Kaap区的视觉狂欢', '企鹅滩：在非洲海岸与绅士偶遇'] }
+            { id: 'Hangzhou', name: '杭州', x: 800, y: 195, desc: '凌晨三点的钱江新城，与其在PPT里虚构未来，不如去西湖烟雨中找回本色。当断桥晨曦刺破薄雾，那个课本边缘画满航线的孩子，正等你重新出发。', 
+              routes: ['西湖：柳浪闻莺的千年呼吸', '龙井：云雾深处的龙踪拾遗', '灵隐：空山梵呗的灵魂禅步', '运河：流向繁华的旧梦长廊', '良渚：五千年文明的最初心跳'],
+              routeImages: [
+                'https://images.unsplash.com/photo-1599591452655-08e08d6d6da7?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1543161353-85f403f2956c?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1597523910901-526462725838?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1590487988256-9ed24133863e?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1563242080-87a2688b146f?w=200&h=200&fit=crop'
+              ]
+            },
+            { id: 'Beijing', name: '北京', x: 790, y: 155, desc: '从中轴线的红墙出发，跨越千年的时空。这里的风吹过紫禁城，仿佛在告诉你：世界很大，不止方寸之间。', 
+              routes: ['中轴：皇城脊梁的威仪巡游', '故宫：斜阳下的红墙金瓦碎片', '昆明湖：皇家园林的晚风画卷', '万里：长城之上的骨骼与梦想', '什刹海：胡同里的市井烟火梦'],
+              routeImages: [
+                'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1555505012-320485675e87?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1529921879218-f99546d03a9d?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1536647245842-8820c7844062?w=200&h=200&fit=crop'
+              ]
+            },
+            { id: 'Seoul', name: '首尔', x: 820, y: 160, desc: '汉江的水映着现代霓虹。从古老的宫殿到动感的街头，你正踏入亚洲最富张力的心跳地带。', 
+              routes: ['汉江：晓月映照下的流感霓虹', '景福宫：岁月缝隙里的王朝叙事', '北村：韩屋脊岭间的古老呼吸', '南山：锁住永恒的塔尖光芒', '江南：全球节奏的最强鼓点'],
+              routeImages: [
+                'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1524311588144-839070381f21?w=200&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1476357471311-43c0db9fb2b4?w=200&h=200&fit=crop'
+              ]
+            },
+            { id: 'Tokyo', name: '东京', x: 860, y: 180, desc: '涩谷十字路口的极速心跳，与银座的秩序感交织。霓虹熄灭后，我们将跨越海峡。', routes: ['涩谷：孤独漂流', '银座：审美秩序', '上野：落樱禅机', '新宿：迷宫之眼', '千代田：护城河'], routeImages: ['https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1554797589-7241bb691973?w=200&h=200&fit=crop'] },
+            { id: 'Taipei', name: '台北', x: 815, y: 235, desc: '101的摩天高度下藏着巷弄里的温润。稍作停歇，南下的热带海风已经在呼唤你。', routes: ['101图腾', '士林救赎', '淡水慢板', '九份怀旧', '象山广角'], routeImages: ['https://images.unsplash.com/photo-1552912110-67259461280b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1534008757030-27299c4371b6?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1533227268408-a774655d8c3b?w=200&h=200&fit=crop'] },
+            { id: 'Singapore', name: '新加坡', x: 765, y: 345, desc: '花园城市的热带森林，是文明与自然共生的奇迹。跨越赤道，去拥抱更辽阔的大洋。', routes: ['赛博森林', '热带浪尖', '祖辈基因', '微醺河畔', '抵达注视'], routeImages: ['https://images.unsplash.com/photo-1525625230556-8e8b8e96978e?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1558231261-26922a00f2e0?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1543833078-05500ce793e8?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1510009489794-352fba39acd3?w=200&h=200&fit=crop'] },
+            { id: 'Sydney', name: '悉尼', x: 840, y: 445, desc: '歌剧院的风帆正被南半球的海风吹动。穿过太平洋的浩渺，去往狂欢的南美海岸。', routes: ['艺术共鸣', '钢铁脊梁', '浪尖飞行', '漫步诗行', '殖民记忆'], routeImages: ['https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1524820197278-540916411e20?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1528072164453-f4e8ef0d475a?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=200&h=200&fit=crop'] },
+            { id: 'Rio', name: '里约', x: 280, y: 360, desc: '科科瓦多山的基督像俯瞰着奔放的舞步。从萨巴的节奏中抽离，一路向北。', routes: ['终极慰藉', '海湾视角', '街头旋转', '阳光崇拜', '真实生存'], routeImages: ['https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1516306580123-e6e52b1b7b5f?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1490604001847-b712b0c2f967?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1591461530184-e9be75cc4013?w=200&h=200&fit=crop'] },
+            { id: 'NewYork', name: '纽约', x: 235, y: 145, desc: '时代广场的灯火永不熄灭。在摩天大楼的丛林里奔跑后，我们将去往风之城。', routes: ['爆炸核心', '翡翠呼吸', '告别曼哈', '金钱帝国', '开拓者魂'], routeImages: ['https://images.unsplash.com/photo-1496871455396-14e56815f1f4?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1516339901600-2e1a62dc0c45?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?w=200&h=200&fit=crop'] },
+            { id: 'Chicago', name: '芝加哥', x: 205, y: 140, desc: '风之城的云门镜像里，编织出硬核的都市梦。穿过内陆，去往好莱坞。', routes: ['扭曲世界', '摩天怀旧', '垂直竞速', '凌空快感', '湖滨回响'], routeImages: ['https://images.unsplash.com/photo-1494522855154-9297ac14b55f?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1471306224500-6d0d218be372?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1490644659542-bc393ef847c2?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1490131411312-b2ee2fe9da12?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1444212477490-ca407925329e?w=200&h=200&fit=crop'] },
+            { id: 'LosAngeles', name: '洛杉矶', x: 145, y: 185, desc: '太平洋的巨浪拍打着星光大道。现在，我们将横跨大西洋，开启欧洲的古老诗篇。', routes: ['成名幻梦', '66终点', '棕榈树影', '星空对视', '曼巴领地'], routeImages: ['https://images.unsplash.com/photo-1541336032412-2048a678540d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1502899576159-f224dc23efb7?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1506377247377-2a5b3b0ca7df?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1445011713480-77a837ca7f7c?w=200&h=200&fit=crop'] },
+            { id: 'London', name: '伦敦', x: 470, y: 110, desc: '泰晤士河的雾气笼罩着大本钟。从这里的绅士步伐，转入地中海暖阳。', routes: ['历史回音', '钢铁升降', '自由奔跑', '漫长黑夜', '9¾站台'], routeImages: ['https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=200&h=200&fit=crop'] },
+            { id: 'Rome', name: '罗马', x: 495, y: 155, desc: '条条大路通罗马。在古竞技场的残垣下感受澎湃历史。最后，我们将去往世界尽头。', routes: ['废墟之魂', '两千光束', '永恒硬币', '伟大穹顶', '罗马之光'], routeImages: ['https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1529260830199-42c24126f198?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1515542641795-06ed223c3bd2?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1525874684015-58379d421a52?w=200&h=200&fit=crop'] },
+            { id: 'CapeTown', name: '开普敦', x: 520, y: 440, desc: '桌山的云海交汇于大西洋。当你抵达这里，你才发现，那个坐在格子间里做梦的孩子，从未离开。', routes: ['流动云海', '惊涛交汇', '自由起点', '视觉狂欢', '绅士偶遇'], routeImages: ['https://images.unsplash.com/photo-1580193703491-3e58c6af1506?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1576485736318-7b9ca4e1a742?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1576485736318-7b9ca4e1a742?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1580611417532-60193703491c?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?w=200&h=200&fit=crop'] }
         ];
 
         let state = { currentIndex: 0, currentRouteIndex: 0, completedIndices: [0], style: '---', exploreProgress: 0 };
@@ -364,9 +449,8 @@
 
                 if (num === 3) updateMapStatus();
                 if (num === 4) {
-                    const city = storyChain[state.currentIndex];
-                    document.getElementById('target-city-name').innerText = city.name;
-                    document.getElementById('target-city-desc').innerText = city.desc;
+                    document.getElementById('target-city-name').innerText = storyChain[state.currentIndex].name;
+                    document.getElementById('target-city-desc').innerText = storyChain[state.currentIndex].desc;
                 }
                 if (num === 5) renderRouteCards();
                 if (num === 6) {
@@ -376,7 +460,6 @@
                     stamp.classList.remove('stamp-active');
                     setTimeout(() => stamp.classList.add('stamp-active'), 400);
 
-                    // 下一城市预告逻辑
                     const nextCity = storyChain[state.currentIndex + 1];
                     const previewArea = document.getElementById('next-city-preview');
                     const triggerBtn = document.getElementById('btn-trigger-flight');
@@ -384,7 +467,6 @@
                     if (nextCity) {
                         previewArea.style.display = 'block';
                         document.getElementById('next-city-name-display').innerText = nextCity.name;
-                        // 截取前35个字作为预告
                         document.getElementById('next-city-short-desc').innerText = nextCity.desc.substring(0, 35) + '...';
                         triggerBtn.innerText = '前往下一城市';
                         triggerBtn.onclick = () => { toStep(3); setTimeout(drawFlight, 600); };
@@ -405,13 +487,29 @@
             const city = storyChain[state.currentIndex];
             container.innerHTML = '';
             document.getElementById('route-stat').innerText = `${state.currentRouteIndex} / 5`;
+            
             city.routes.forEach((r, idx) => {
                 const card = document.createElement('div');
                 card.className = 'route-card';
                 if (idx > state.currentRouteIndex) card.classList.add('locked');
                 else if (idx === state.currentRouteIndex) card.classList.add('active');
                 else card.classList.add('completed');
-                card.innerHTML = `<div class="flex items-center"><div class="route-id">${idx+1}</div><div><div class="text-[7px] text-white/20 uppercase tracking-widest mb-0.5">Seg 0${idx+1}</div><div class="serif text-sm text-white font-bold">${r}</div></div></div><div class="text-[8px] ${idx < state.currentRouteIndex ? 'text-teal-400' : 'text-white/30'} font-bold uppercase">${idx < state.currentRouteIndex ? 'Done' : (idx === state.currentRouteIndex ? 'Explore' : 'Locked')}</div>`;
+
+                const imgUrl = city.routeImages ? city.routeImages[idx] : `https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&h=200&fit=crop`;
+
+                card.innerHTML = `
+                    <div class="route-thumb">
+                        <img src="${imgUrl}" alt="${r}" onerror="this.src='https://via.placeholder.com/150/111/teal?text=Route'">
+                    </div>
+                    <div class="route-content">
+                        <div class="text-[7px] text-white/20 uppercase tracking-widest mb-0.5">Segment 0${idx+1}</div>
+                        <div class="serif text-sm text-white font-bold leading-tight truncate">${r}</div>
+                        <div class="text-[8px] mt-1.5 ${idx < state.currentRouteIndex ? 'text-teal-400' : 'text-white/30'} font-bold uppercase tracking-widest">
+                            ${idx < state.currentRouteIndex ? 'Captured' : (idx === state.currentRouteIndex ? 'Explore Now' : 'Locked')}
+                        </div>
+                    </div>
+                `;
+
                 if (idx === state.currentRouteIndex) card.onclick = () => startExploration(r);
                 container.appendChild(card);
             });
@@ -419,7 +517,8 @@
 
         function startExploration(routeName) {
             document.getElementById('explore-route-name').innerText = routeName;
-            document.getElementById('exploration-overlay').style.display = 'flex';
+            const overlay = document.getElementById('exploration-overlay');
+            overlay.style.display = 'flex';
             state.exploreProgress = 0;
             updateExploreUI();
         }
@@ -446,14 +545,30 @@
         function drawFlight() {
             const from = storyChain[state.currentIndex], to = storyChain[state.currentIndex + 1];
             if (!to) return;
+            
             const dx = to.x - from.x, dy = to.y - from.y, dr = Math.sqrt(dx*dx+dy*dy);
+            const pathId = `flightPath_${Date.now()}`;
+            const pathStr = `M${from.x},${from.y} A${dr*0.8},${dr*0.8} 0 0,${dx > 0 ? 1 : 0} ${to.x},${to.y}`;
+            
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('id', pathId);
+            path.setAttribute('d', pathStr);
             path.classList.add('flight-path', 'flight-anim');
-            path.setAttribute('d', `M${from.x},${from.y} A${dr*0.8},${dr*0.8} 0 0,${dx > 0 ? 1 : 0} ${to.x},${to.y}`);
             document.getElementById('flight-paths-layer').appendChild(path);
+
+            const planeG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            planeG.classList.add('paper-plane');
+            planeG.style.offsetPath = `path('${pathStr}')`;
+            planeG.innerHTML = `<path d="M10,0 L-8,-6 L-4,0 L-8,6 Z" />`;
+            document.getElementById('flight-paths-layer').appendChild(planeG);
+
             state.currentIndex++; state.currentRouteIndex = 0;
             if (!state.completedIndices.includes(state.currentIndex)) state.completedIndices.push(state.currentIndex);
-            setTimeout(() => toStep(4), 2600);
+            
+            setTimeout(() => {
+                planeG.remove();
+                toStep(4);
+            }, 2600);
         }
 
         function updateMapStatus() {
