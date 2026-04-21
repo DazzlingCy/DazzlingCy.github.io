@@ -3,447 +3,502 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>城市足迹：云端漫步 - 跑步集卡活动</title>
+    <title>跑遍全世界 - 环球剧情沉浸版</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+
         :root {
-            --bg-color: #f7f8e8;
-            --accent-green: #8dae90;
-            --accent-orange: #e89165;
-            --paper-color: #fffef2;
-            --border-color: #d1ccb0;
+            --tianqing: #98B4B0;
+            --midnight: #05080a;
+            --accent: #2dd4bf;
+            --gold: #D4AF37;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         body {
-            background-color: var(--bg-color);
-            font-family: 'Noto Serif SC', serif;
-            color: #4a4a4a;
-            background-image: radial-gradient(circle at 10% 20%, rgba(141, 174, 144, 0.05) 0%, transparent 40%),
-                              radial-gradient(circle at 90% 80%, rgba(232, 145, 101, 0.05) 0%, transparent 40%);
-            overflow-x: hidden;
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--midnight);
+            color: #e2e8f0;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
         }
 
-        /* 模拟和纸质感 */
-        .paper-texture {
-            background-color: var(--paper-color);
-            position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
+        .serif { font-family: 'Noto Serif SC', serif; }
+
+        /* 隐藏滚动条 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 全局场景切换 */
+        .scene {
+            position: fixed;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        .paper-texture::after {
-            content: "";
+        .star-bg {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #0a151a 0%, #05080a 100%);
+            z-index: -2;
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+        }
+
+        .scan-line {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: url('https://www.transparenttextures.com/patterns/handmade-paper.png');
-            opacity: 0.5;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.1;
+            animation: scanMove 8s linear infinite;
+            z-index: 10;
             pointer-events: none;
         }
+        @keyframes scanMove { 0% { top: 0%; } 100% { top: 100%; } }
 
-        .title-decoration {
-            display: inline-block;
+        /* 手机端按钮 */
+        .btn-luxury {
             position: relative;
-            padding: 0 20px;
+            padding: 16px 32px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-align: center;
+            transition: all 0.3s;
         }
+        .btn-luxury:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
 
-        .title-decoration::before, .title-decoration::after {
-            content: "✦";
-            color: var(--accent-orange);
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .title-decoration::before { left: -5px; }
-        .title-decoration::after { right: -5px; }
-
-        .custom-btn {
-            background-color: var(--accent-orange);
-            color: white;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 0px #c67a52;
-        }
-
-        .custom-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0px #c67a52;
-        }
-
-        .custom-btn:disabled {
-            background-color: #ccc;
-            box-shadow: 0 4px 0px #999;
-            cursor: not-allowed;
-        }
-
-        /* 卡片动画 */
-        .card-item {
-            perspective: 1000px;
-        }
-
-        .card-inner {
-            position: relative;
-            width: 100%;
-            height: 180px;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            transform-style: preserve-3d;
-        }
-
-        .card-inner.is-flipped {
-            transform: rotateY(180deg);
-        }
-
-        .card-face {
-            position: absolute;
+        /* 地图适配：手机端支持缩放与平移 */
+        .map-viewport {
             width: 100%;
             height: 100%;
-            backface-visibility: hidden;
+            overflow: auto;
             display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .world-map-svg {
+            width: 180%; /* 在手机端默认略大于屏幕，增加探索感 */
+            max-width: none;
+            height: auto;
+            flex-shrink: 0;
+        }
+        @media (min-width: 768px) {
+            .world-map-svg { width: 100%; max-width: 1000px; }
+        }
+
+        .continent { fill: rgba(45, 212, 191, 0.06); stroke: rgba(255,255,255,0.08); stroke-width: 0.5; }
+        .city-node circle { fill: rgba(255,255,255,0.2); transition: all 0.4s; }
+        .city-node.active circle { fill: #fff; r: 6; filter: drop-shadow(0 0 10px #fff); }
+        .city-node.completed circle { fill: var(--accent); filter: drop-shadow(0 0 8px var(--accent)); }
+        
+        .flight-path {
+            fill: none;
+            stroke: var(--gold);
+            stroke-width: 2;
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            filter: drop-shadow(0 0 4px var(--gold));
+            opacity: 0.7;
+        }
+        .flight-anim { animation: flyPath 2.8s forwards cubic-bezier(0.45, 0.05, 0.55, 0.95); }
+        @keyframes flyPath { to { stroke-dashoffset: 0; } }
+
+        /* 路线列表条目 */
+        .route-card {
+            width: 100%;
+            padding: 20px;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+        }
+        .route-card.locked { opacity: 0.25; filter: grayscale(1); }
+        .route-card.active { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); }
+        .route-card.completed { border-color: rgba(45, 212, 191, 0.3); }
+        .route-id { font-family: 'Noto Serif SC', serif; font-weight: 900; opacity: 0.2; font-size: 20px; margin-right: 15px; }
+
+        /* 实景挑战 */
+        #exploration-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 500;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            padding: 20px;
         }
 
-        .card-back {
-            background-color: #e2e8cc;
-            background-image: url('https://www.transparenttextures.com/patterns/binding-dark.png');
-        }
-
-        .card-front {
-            background-color: white;
-            transform: rotateY(180deg);
-        }
-
-        .rare-badge {
-            background: linear-gradient(45deg, #ffd700, #ff8c00);
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
+        .tag-float {
             position: absolute;
-            top: 4px;
-            right: 4px;
-        }
-
-        /* 飘落樱花背景动画 */
-        @keyframes fall {
-            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
-        }
-
-        .petal {
-            position: fixed;
-            top: -10vh;
+            font-size: 10px;
+            color: rgba(255,255,255,0.15);
+            animation: tagFloat 6s infinite ease-in-out;
             pointer-events: none;
-            z-index: 0;
-            color: #ffc0cb;
-            font-size: 20px;
-            animation: fall 10s linear infinite;
+            white-space: nowrap;
         }
+        @keyframes tagFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* 弹窗遮罩 */
-        .modal-overlay {
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
+        .stamp-effect {
+            border: 3px double #d9534f;
+            color: #d9534f;
+            transform: scale(2) rotate(-30deg);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .stamp-active { opacity: 1; transform: scale(1) rotate(-15deg); }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: 99px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+            font-size: 11px;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            cursor: pointer;
         }
     </style>
 </head>
-<body class="min-h-screen pb-12">
+<body>
 
-    <!-- 装饰性樱花瓣与绿叶 -->
-    <div class="petal" style="left: 10%; animation-delay: 0s;">🌸</div>
-    <div class="petal" style="left: 30%; animation-delay: 2s; font-size: 15px;">🌸</div>
-    <div class="petal" style="left: 55%; animation-delay: 5s;">🍃</div>
-    <div class="petal" style="left: 80%; animation-delay: 1s;">🌸</div>
-    <div class="petal" style="left: 92%; animation-delay: 3s; font-size: 12px;">🍃</div>
+    <div class="star-bg"></div>
+    <div class="scan-line"></div>
+    <div id="teleport-gate" class="fixed inset-0 z-[1000] bg-black opacity-0 pointer-events-none transition-opacity duration-500"></div>
 
-    <!-- 顶部 Banner -->
-    <div class="relative w-full overflow-hidden flex flex-col items-center pt-12 pb-8 bg-gradient-to-b from-[#e2ebde] to-transparent">
-        <h1 class="text-3xl font-bold tracking-widest text-[#5a7a5c] mb-2">城市足迹：云端漫步</h1>
-        <p class="text-sm text-[#7a9a7c]">收集城市印记 漫步云端奇旅</p>
-        <div class="mt-8 w-48 h-48 bg-white/40 rounded-full flex items-center justify-center border-4 border-white shadow-xl relative">
-            <div class="text-6xl animate-bounce">🏃</div>
-            <div class="absolute -bottom-2 -right-2 bg-white px-3 py-1 rounded-full shadow text-xs font-bold text-orange-500">
-                限量 1000 份
-            </div>
-        </div>
-    </div>
-
-    <!-- 核心功能区 -->
-    <main class="max-w-md mx-auto px-4 space-y-8 relative z-10">
+    <!-- STEP 1: 现实与觉醒 -->
+    <section id="step-1" class="scene items-center justify-center p-10 text-center" style="display: flex; opacity: 1;">
+        <div class="tag-float" style="top: 10%; left: 5%;"># 钉在格子间的影子</div>
+        <div class="tag-float" style="top: 25%; right: 5%; animation-delay: 1s;"># 凌晨两点的加班费</div>
         
-        <!-- 任务列表 -->
-        <section class="paper-texture p-4">
-            <div class="text-center mb-6">
-                <span class="title-decoration text-lg font-bold text-[#8a6d3b]">任务列表</span>
+        <div class="max-w-xs animate__animated animate__fadeIn">
+            <h2 class="text-teal-400 text-[9px] tracking-[0.6em] mb-6 font-bold uppercase opacity-60">The World Calling</h2>
+            <h1 class="serif text-4xl mb-10 leading-tight tracking-tighter text-white font-bold">跑遍全世界</h1>
+            
+            <div class="space-y-6 text-gray-400 text-sm leading-relaxed mb-14 px-2">
+                <p>鼠标在无穷的像素间迁徙，<br>却从未触碰到真实的晚风。</p>
+                <p class="text-white opacity-90">你突然想起，十岁年指尖划过的地球仪，<br>那里装载过一整个星辰大海。</p>
+                <p>那些被琐事埋没的梦，<br>一站接一站，跑回来。</p>
             </div>
             
-            <div id="task-container" class="space-y-4">
-                <div class="flex items-center justify-between p-3 border-b border-dashed border-[#d1ccb0] last:border-0">
-                    <div>
-                        <h4 class="font-bold text-sm">每日完成一条路线</h4>
-                        <p class="text-xs text-gray-500">奖励 1 次机会 (每日 1 次)</p>
-                    </div>
-                    <button onclick="completeTask(0)" id="btn-task-0" class="custom-btn px-4 py-1 rounded-full text-xs">去跑跑</button>
-                </div>
-                <div class="flex items-center justify-between p-3 border-b border-dashed border-[#d1ccb0] last:border-0">
-                    <div>
-                        <h4 class="font-bold text-sm">每日分享一次页面</h4>
-                        <p class="text-xs text-gray-500">奖励 1 次机会 (每日 1 次)</p>
-                    </div>
-                    <button onclick="completeTask(1)" id="btn-task-1" class="custom-btn px-4 py-1 rounded-full text-xs">去分享</button>
-                </div>
-                <div class="flex items-center justify-between p-3 border-b border-dashed border-[#d1ccb0] last:border-0">
-                    <div>
-                        <h4 class="font-bold text-sm">浏览城市概览图</h4>
-                        <p class="text-xs text-gray-500">奖励 1 次机会 (每日 1 次)</p>
-                    </div>
-                    <button onclick="completeTask(2)" id="btn-task-2" class="custom-btn px-4 py-1 rounded-full text-xs">去浏览</button>
-                </div>
-                <div class="flex items-center justify-between p-3 border-b border-dashed border-[#d1ccb0] last:border-0">
-                    <div>
-                        <h4 class="font-bold text-sm">完成一座城市挑战</h4>
-                        <p class="text-xs text-slate-500">奖励 10 次漫步机会</p>
-                    </div>
-                    <button onclick="completeTask(3)" id="btn-task-3" class="custom-btn px-4 py-1 rounded-full text-xs">去挑战</button>
-                </div>
-            </div>
-        </section>
+            <button onclick="toStep(2)" class="btn-luxury w-full">唤醒沉睡的步伐</button>
+        </div>
+    </section>
 
-        <!-- 云端漫步区 -->
-        <section class="paper-texture p-4 overflow-hidden">
-            <div class="text-center mb-4">
-                <span class="title-decoration text-lg font-bold text-[#8a6d3b]">云端漫步</span>
-            </div>
+    <!-- STEP 2: 灵魂人格重塑 -->
+    <section id="step-2" class="scene items-center justify-center p-6">
+        <div class="w-full max-w-xs">
+            <h2 class="serif text-3xl mb-4 text-center text-white tracking-tight">定义探索之眼</h2>
+            <p class="text-gray-500 text-[11px] text-center mb-10">剥去职场身份，你希望如何重逢星球？</p>
             
-            <div class="flex justify-center space-x-4 mb-6">
-                <div class="card-item w-28">
-                    <div id="draw-card-anim" class="card-inner">
-                        <div class="card-face card-back">
-                            <span class="text-2xl opacity-50">?</span>
-                        </div>
-                        <div id="card-result-face" class="card-face card-front p-2 text-center">
-                            <div id="result-icon" class="text-3xl mb-1">🏞️</div>
-                            <div id="result-name" class="font-bold text-xs">西湖卡</div>
-                        </div>
+            <div class="space-y-4">
+                <button onclick="selectStyle('孤山隐士')" class="glass-panel w-full p-6 flex justify-between items-center group active:bg-white/5 transition-all">
+                    <div class="text-left">
+                        <div class="font-bold text-lg text-white mb-1">孤山隐士</div>
+                        <div class="text-[9px] text-gray-500 uppercase tracking-widest">Minimalist · Silent</div>
                     </div>
-                </div>
-            </div>
-
-            <div class="text-center">
-                <p class="text-xs text-gray-500 mb-2">剩余漫步机会：<span id="chance-count" class="font-bold text-orange-500">0</span> 次</p>
-                <button onclick="drawCard()" id="btn-draw" class="custom-btn px-8 py-2 rounded-full font-bold">开启漫步</button>
-                <p class="text-[9px] text-gray-400 mt-2">提示：每抽 10 次必得一张稀有卡</p>
-            </div>
-        </section>
-
-        <!-- 足迹图鉴区 -->
-        <section class="paper-texture p-4">
-            <div class="flex justify-between items-center mb-4 px-2">
-                <h3 class="font-bold text-[#5a7a5c]">我的足迹图鉴</h3>
-                <span class="text-xs">已采集 <span id="collected-types" class="text-orange-500">0</span>/5</span>
-            </div>
-            
-            <div class="grid grid-cols-3 gap-3" id="inventory-grid">
-                <!-- 卡片槽由 JS 生成 -->
-            </div>
-
-            <div class="mt-8">
-                <button onclick="synthesizePrize()" id="btn-synthesize" class="w-full bg-[#8dae90] text-white py-3 rounded-xl font-bold opacity-50 cursor-not-allowed transition-all">
-                    合成云端大礼
+                    <div class="text-teal-400">→</div>
                 </button>
-                <p class="text-center text-[10px] text-gray-400 mt-2">点亮 5 处足迹即可合成最终奖励</p>
+
+                <button onclick="selectStyle('城市猎人')" class="glass-panel w-full p-6 flex justify-between items-center group active:bg-white/5 transition-all">
+                    <div class="text-left">
+                        <div class="font-bold text-lg text-white mb-1">城市猎人</div>
+                        <div class="text-[9px] text-gray-500 uppercase tracking-widest">Dynamic · Pulsing</div>
+                    </div>
+                    <div class="text-teal-400">→</div>
+                </button>
             </div>
-        </section>
+        </div>
+    </section>
 
-    </main>
+    <!-- STEP 3: 全球指挥地图 -->
+    <section id="step-3" class="scene overflow-hidden">
+        <div class="absolute top-12 left-6 z-20 pointer-events-none">
+            <h2 class="serif text-5xl text-teal-400 font-black mb-1" id="city-count-display">1 / 14</h2>
+            <p class="text-[9px] text-white/40 tracking-[0.3em] uppercase" id="current-city-label">Station: HANGZHOU</p>
+        </div>
+        
+        <div class="map-viewport no-scrollbar">
+            <svg id="world-map" class="world-map-svg" viewBox="0 0 1000 500">
+                <g id="grid-layer" opacity="0.2">
+                    <path class="grid-line" d="M0,100 H1000 M0,200 H1000 M0,300 H1000 M0,400 H1000" stroke="white" stroke-width="0.3" stroke-dasharray="2 2" />
+                    <path class="grid-line" d="M200,0 V500 M400,0 V500 M600,0 V500 M800,0 V500" stroke="white" stroke-width="0.3" stroke-dasharray="2 2" />
+                </g>
+                <g id="land-layer">
+                    <path class="continent" d="M100,100 L180,80 L220,100 L250,150 L230,220 L150,200 L120,150 Z" />
+                    <path class="continent" d="M230,230 L300,280 L280,380 L240,400 L210,320 Z" />
+                    <path class="continent" d="M450,180 L520,180 L580,250 L550,350 L480,380 L440,300 L420,220 Z" />
+                    <path class="continent" d="M450,170 L420,120 L450,80 L550,60 L750,80 L850,150 L820,250 L750,230 L650,200 L550,220 Z" />
+                    <path class="continent" d="M780,320 L850,330 L840,380 L790,370 Z" />
+                </g>
+                <g id="flight-paths-layer"></g>
+                <g id="nodes-layer"></g>
+            </svg>
+        </div>
 
-    <!-- 弹窗：中奖提示 -->
-    <div id="win-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 modal-overlay">
-        <div class="bg-white rounded-2xl p-8 text-center max-w-xs w-full animate-in fade-in zoom-in duration-300">
-            <h2 class="text-xl font-bold text-orange-500 mb-4">✨ 发现新足迹</h2>
-            <div class="w-24 h-36 bg-[#f9f9f9] border border-orange-200 rounded-lg mx-auto flex flex-col items-center justify-center mb-4 relative">
-                <div id="modal-card-icon" class="text-4xl mb-2"></div>
-                <div id="modal-card-name" class="font-bold"></div>
-                <div id="modal-rare-tag" class="hidden absolute top-1 right-1 bg-orange-500 text-white text-[8px] px-1 rounded">RARE</div>
+        <div class="fixed bottom-12 left-0 w-full flex justify-center px-6 z-30">
+            <button id="btn-next-target" class="btn-luxury w-full max-w-xs border-teal-400/20 text-teal-400 bg-teal-400/5 backdrop-blur-md">开启探索</button>
+        </div>
+    </section>
+
+    <!-- STEP 4: 城市概况 -->
+    <section id="step-4" class="scene items-center justify-center p-6 bg-black/98">
+        <div class="absolute top-10 left-6">
+            <button onclick="toStep(3)" class="btn-back">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                返回地图
+            </button>
+        </div>
+
+        <div class="max-w-xs text-center">
+            <div class="inline-block px-3 py-1 border border-teal-500/10 text-teal-400 text-[8px] uppercase tracking-[0.4em] mb-8 rounded-full font-bold">New Realm Unlocked</div>
+            <h2 id="target-city-name" class="serif text-6xl mb-10 tracking-tighter text-white font-black italic">杭州</h2>
+            <div class="relative py-4 mb-14">
+                <p id="target-city-desc" class="text-gray-400 text-xs leading-loose px-4 serif italic">
+                    凌晨三点的钱江新城，与其在PPT里虚构未来，不如去西湖烟雨中找回本色。这一站，不为绩效奔跑，只为找回那个鲜活的世界。
+                </p>
             </div>
-            <button onclick="closeModal('win-modal')" class="custom-btn w-full py-2 rounded-full">点亮足迹</button>
+            <button onclick="toStep(5)" class="btn-luxury bg-white text-black font-bold w-full py-4 tracking-[0.4em] border-none">深入探索路线</button>
         </div>
-    </div>
+    </section>
 
-    <!-- 弹窗：合成成功 -->
-    <div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 modal-overlay">
-        <div class="bg-white rounded-2xl p-8 text-center max-w-xs w-full">
-            <div class="text-6xl mb-4">🏆</div>
-            <h2 class="text-xl font-bold text-green-600 mb-2">足迹圆满！</h2>
-            <p class="text-sm text-gray-600 mb-6">漫步云端的旅程已汇聚成礼。请前往领奖，查看您的专属纪念奖励。</p>
-            <button onclick="closeModal('success-modal')" class="custom-btn w-full py-2 rounded-full">确定</button>
+    <!-- STEP 5: 路线挑战列表 -->
+    <section id="step-5" class="scene p-6 bg-black">
+        <div class="w-full h-full flex flex-col relative pt-16">
+            <div class="absolute top-4 left-0">
+                <button onclick="toStep(3)" class="btn-back">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    返回地图
+                </button>
+            </div>
+
+            <header class="mb-8 flex justify-between items-end shrink-0">
+                <div>
+                    <h3 class="serif text-3xl text-white font-bold">城市脉络</h3>
+                    <p class="text-gray-500 text-[9px] uppercase mt-2 tracking-widest">Connect to conquer the city</p>
+                </div>
+                <div class="text-teal-400 text-xl font-black" id="route-stat">0 / 5</div>
+            </header>
+            
+            <div id="route-cards-container" class="flex-1 flex flex-col overflow-y-auto pb-6 no-scrollbar pr-1">
+                <!-- 动态生成 -->
+            </div>
         </div>
-    </div>
 
-    <footer class="text-center mt-12 opacity-40 text-[10px]">
-        © 2024 CLOUDY WALK PROJECT
-    </footer>
+        <div id="exploration-overlay">
+            <nav class="absolute top-6 w-full px-6 flex justify-between items-center z-50">
+                <button onclick="closeExploration()" class="text-[9px] text-white/40 uppercase tracking-widest border border-white/10 px-3 py-1.5 rounded-full">放弃</button>
+                <div id="explore-route-name" class="serif text-sm text-white italic">西湖：柳浪闻莺</div>
+            </nav>
+            
+            <div class="relative z-10 text-center w-full max-w-xs">
+                <div class="mb-14">
+                    <div class="text-6xl font-black text-teal-400 mb-4 tracking-tighter" id="explore-progress-text">0%</div>
+                    <div class="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                        <div id="explore-progress-bar" class="h-full bg-teal-400 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <button id="tap-run-btn" class="w-40 h-40 rounded-full border border-white/10 flex items-center justify-center mx-auto bg-white/5 active:bg-white/10 active:scale-90 transition-all shadow-2xl">
+                    <span class="text-teal-400 font-black text-4xl">RUN</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- STEP 6: 灵魂护照 -->
+    <section id="step-6" class="scene items-center justify-center p-6 bg-black/99">
+        <div class="glass-panel w-full max-w-xs p-10 animate__animated animate__zoomIn mb-12">
+            <div class="flex justify-between items-start mb-14">
+                <span class="serif font-black italic text-2xl text-white">PASSPORT</span>
+                <span class="text-[9px] font-mono text-white/20">#VOID-233</span>
+            </div>
+            
+            <div class="space-y-8 mb-10">
+                <div>
+                    <p class="text-[8px] text-gray-500 uppercase mb-2 tracking-[0.2em]">Spirit</p>
+                    <p id="user-style" class="serif text-xl font-bold text-white">---</p>
+                </div>
+                <div>
+                    <p class="text-[8px] text-gray-500 uppercase mb-2 tracking-[0.2em]">Unlocked</p>
+                    <p id="earned-city" class="serif text-2xl font-black italic text-teal-400">---</p>
+                </div>
+                <div class="pt-6 border-t border-dashed border-white/10 flex justify-center">
+                    <div id="stamp-box" class="stamp-effect font-black text-lg px-4 py-1">VALIDATED</div>
+                </div>
+            </div>
+        </div>
+        
+        <button id="btn-trigger-flight" class="btn-luxury w-full max-w-xs bg-white text-black font-bold border-none">跃迁至下一时空</button>
+    </section>
 
     <script>
-        const state = {
-            chances: 0,
-            drawCountSinceRare: 0, // 新增：记录距上一次稀有卡的抽奖次数
-            cardLibrary: [
-                { id: 0, name: '故宫印记', icon: '🏛️', rare: false, weight: 30 },
-                { id: 1, name: '西湖印记', icon: '🛶', rare: false, weight: 30 },
-                { id: 2, name: '玄武印记', icon: '⛲', rare: false, weight: 25 },
-                { id: 3, name: '秦俑印记', icon: '🗿', rare: false, weight: 14 },
-                { id: 4, name: '灵隐印记', icon: '⛩️', rare: true, weight: 1 }
-            ],
-            inventory: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 }
+        const storyChain = [
+            { id: 'Hangzhou', name: '杭州', x: 800, y: 195, desc: '凌晨三点的钱江新城，与其在PPT里虚构未来，不如去西湖烟雨中找回本色。当断桥晨曦刺破薄雾，那个课本边缘画满航线的孩子，正等你重新出发。这一站，不为绩效奔跑，只为找回那个鲜活的世界。', routes: ['西湖：柳浪闻莺的千年呼吸', '龙井：云雾深处的龙踪拾遗', '灵隐：空山梵呗的灵魂禅步', '运河：流向繁华的旧梦长廊', '良渚：五千年文明的最初心跳'] },
+            { id: 'Beijing', name: '北京', x: 790, y: 155, desc: '从中轴线的红墙出发，跨越千年的时空。这里的风吹过紫禁城，仿佛在告诉你：世界很大，不止方寸之间。', routes: ['中轴：皇城脊梁的威仪巡游', '故宫：斜阳下的红墙金瓦碎片', '昆明湖：皇家园林的晚风画卷', '万里：长城之上的骨骼与梦想', '什刹海：胡同里的市井烟火梦'] },
+            { id: 'Seoul', name: '首尔', x: 820, y: 160, desc: '汉江的水映着现代霓虹。从古老的宫殿到动感的街头，你正踏入亚洲最富张力的心跳地带。', routes: ['汉江：晓月映照下的流感霓虹', '景福宫：岁月缝隙里的王朝叙事', '北村：韩屋脊岭间的古老呼吸', '南山：锁住永恒的塔尖光芒', '江南：全球节奏的最强鼓点'] },
+            { id: 'Tokyo', name: '东京', x: 860, y: 180, desc: '涩谷十字路口的极速心跳，与银座的秩序感交织。霓虹熄灭后，我们将跨越海峡。', routes: ['涩谷：亿万人潮流中的孤独漂流', '银座：极致物欲后的审美秩序', '上野：在落樱中寻找片刻禅机', '新宿：24小时不眠的迷宫之眼', '千代田：皇居护城河的静谧屏息'] },
+            { id: 'Taipei', name: '台北', x: 815, y: 235, desc: '101的摩天高度下藏着巷弄里的温润。稍作停歇，南下的热带海风已经在呼唤你。', routes: ['101：直抵云端的数字图腾', '士林：午夜胃袋的温情救赎', '淡水：落日余晖里的琴弦慢板', '九份：山径灯火里的悲情怀旧', '象山：俯瞰整座盆地的灵魂广角'] },
+            { id: 'Singapore', name: '新加坡', x: 765, y: 345, desc: '花园城市的热带森林，是文明与自然共生的奇迹。跨越赤道，去拥抱更辽阔的大洋。', routes: ['滨海湾：在超级树下仰望赛博森林', '圣淘沙：热带浪尖的极速快感', '牛车水：跨越海洋的祖辈基因', '克拉码头：在霓虹里微醺的河畔', '鱼尾狮：记录每一个抵达的注视'] },
+            { id: 'Sydney', name: '悉尼', x: 840, y: 445, desc: '歌剧院的风帆正被南半球的海风吹动。穿过太平洋的浩渺，去往狂欢的南美海岸。', routes: ['歌剧院：白色风帆下的艺术共鸣', '海港大桥：攀登城市的钢铁脊梁', '邦迪：在南太平洋的浪尖飞行', '达令港：海港暮色里的漫步诗行', '岩石区：在砂岩建筑里触摸殖民记忆'] },
+            { id: 'Rio', name: '里约', x: 280, y: 360, desc: '科科瓦多山的基督像俯瞰着奔放的舞步。从萨巴的节奏中抽离，一路向北。', routes: ['基督山：张开双臂的终极慰藉', '面包山：俯瞰瓜纳巴拉湾的视角', '萨巴：在每一个街头疯狂旋转', '科帕卡巴纳：4公里海岸的阳光崇拜', '贫民窟：色彩斑斓的真实生存志'] },
+            { id: 'NewYork', name: '纽约', x: 235, y: 145, desc: '时代广场的灯火永不熄灭。在摩天大楼的丛林里奔跑后，我们将去往风之城。', routes: ['时代广场：全球注意力的爆炸核心', '中央公园：钢铁丛林里的翡翠呼吸', '布鲁克林：在铁索桥上告别曼哈顿', '华尔街：金钱帝国里的步履匆匆', '自由岛：在火炬下寻找开拓者之魂'] },
+            { id: 'Chicago', name: '芝加哥', x: 205, y: 140, desc: '风之城的云门镜像里，编织出硬核的都市梦。穿过内陆，去往好莱坞。', routes: ['云门：在“豆子”里发现扭曲的世界', '海军码头：密歇根湖畔的摩天轮怀旧', '壮丽一英里：建筑教科书里的垂直竞速', '威利斯：在103层透明地板上凌空', '林肯公园：在湖滨大道听风的回响'] },
+            { id: 'LosAngeles', name: '洛杉矶', x: 145, y: 185, desc: '太平洋的巨浪拍打着星光大道。现在，我们将横跨大西洋，开启欧洲的古老诗篇。', routes: ['好莱坞：星光大道上的成名幻梦', '圣莫尼卡：66号公路终点的摩天轮', '比弗利：极致奢华背后的棕榈树影', '格里菲斯：在洛杉矶星空下与城市对视', '斯台普斯：曼巴精神的图腾领地'] },
+            { id: 'London', name: '伦敦', x: 470, y: 110, desc: '泰晤士河的雾气笼罩着大本钟。从这里的绅士步伐，转入地中海暖阳。', routes: ['大本钟：准时敲响的历史回音', '伦敦塔桥：泰晤士河上的钢铁升降', '海德公园：皇室领地里的自由奔跑', '西区：在剧院魅影中沉入漫长黑夜', '国王十字：前往霍格沃茨的9¾站台'] },
+            { id: 'Rome', name: '罗马', x: 495, y: 155, desc: '条条大路通罗马。在古竞技场的残垣下感受澎湃历史。最后，我们将去往世界尽头。', routes: ['斗兽场：帝国废墟里的勇敢者之魂', '万神殿：圆顶之下两千年的光束', '许愿池：投下一枚重返永恒的硬币', '圣彼得：在伟大的穹顶下屏住呼吸', '台伯河：在古桥上等待罗马之光'] },
+            { id: 'CapeTown', name: '开普敦', x: 520, y: 440, desc: '桌山的云海交汇于大西洋。当你抵达这里，你才发现，那个坐在格子间里做梦的孩子，从未离开。', routes: ['桌山：上帝的餐桌与流动的云海', '好望角：大西洋与印度洋的惊涛交汇', '罗本岛：曼德拉自由之梦的起点', '彩色屋：Bo-Kaap区的视觉狂欢', '企鹅滩：在非洲海岸与绅士偶遇'] }
+        ];
+
+        let state = { currentIndex: 0, currentRouteIndex: 0, completedIndices: [0], style: '---', exploreProgress: 0 };
+
+        function initMap() {
+            const nodes = document.getElementById('nodes-layer');
+            nodes.innerHTML = '';
+            storyChain.forEach((city, index) => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.id = `node-${city.id}`;
+                g.classList.add('city-node');
+                if (index === 0) g.classList.add('completed');
+                g.innerHTML = `<circle cx="${city.x}" cy="${city.y}" r="4" /><text x="${city.x + 10}" y="${city.y + 4}" fill="white" font-size="8" opacity="0.4">${city.name}</text>`;
+                nodes.appendChild(g);
+            });
+        }
+
+        function toStep(num) {
+            const gate = document.getElementById('teleport-gate');
+            gate.style.opacity = '1';
+            setTimeout(() => {
+                document.querySelectorAll('.scene').forEach(s => { s.style.display = 'none'; s.style.opacity = '0'; });
+                const target = document.getElementById('step-' + num);
+                target.style.display = 'flex';
+                setTimeout(() => target.style.opacity = '1', 50);
+
+                if (num === 3) updateMapStatus();
+                if (num === 5) renderRouteCards();
+                if (num === 6) {
+                    document.getElementById('earned-city').innerText = storyChain[state.currentIndex].name + '站';
+                    const stamp = document.getElementById('stamp-box');
+                    stamp.classList.remove('stamp-active');
+                    setTimeout(() => stamp.classList.add('stamp-active'), 400);
+                    document.getElementById('btn-trigger-flight').onclick = () => {
+                        if (state.currentIndex === storyChain.length - 1) location.reload();
+                        else { toStep(3); setTimeout(drawFlight, 600); }
+                    };
+                }
+                gate.style.opacity = '0';
+            }, 400);
+        }
+
+        function selectStyle(s) { state.style = s; document.getElementById('user-style').innerText = s; toStep(3); }
+
+        function renderRouteCards() {
+            const container = document.getElementById('route-cards-container');
+            const city = storyChain[state.currentIndex];
+            container.innerHTML = '';
+            document.getElementById('route-stat').innerText = `${state.currentRouteIndex} / 5`;
+            city.routes.forEach((r, idx) => {
+                const card = document.createElement('div');
+                card.className = 'route-card';
+                if (idx > state.currentRouteIndex) card.classList.add('locked');
+                else if (idx === state.currentRouteIndex) card.classList.add('active');
+                else card.classList.add('completed');
+                card.innerHTML = `<div class="flex items-center"><div class="route-id">${idx+1}</div><div><div class="text-[7px] text-white/20 uppercase tracking-widest mb-0.5">Seg 0${idx+1}</div><div class="serif text-sm text-white font-bold">${r}</div></div></div><div class="text-[8px] ${idx < state.currentRouteIndex ? 'text-teal-400' : 'text-white/30'} font-bold uppercase">${idx < state.currentRouteIndex ? 'Done' : (idx === state.currentRouteIndex ? 'Explore' : 'Locked')}</div>`;
+                if (idx === state.currentRouteIndex) card.onclick = () => startExploration(r);
+                container.appendChild(card);
+            });
+        }
+
+        function startExploration(routeName) {
+            document.getElementById('explore-route-name').innerText = routeName;
+            document.getElementById('exploration-overlay').style.display = 'flex';
+            state.exploreProgress = 0;
+            updateExploreUI();
+        }
+
+        function closeExploration() { document.getElementById('exploration-overlay').style.display = 'none'; }
+        function updateExploreUI() { 
+            document.getElementById('explore-progress-text').innerText = state.exploreProgress + '%';
+            document.getElementById('explore-progress-bar').style.width = state.exploreProgress + '%';
+        }
+
+        document.getElementById('tap-run-btn').onclick = () => {
+            state.exploreProgress += 20;
+            updateExploreUI();
+            if (state.exploreProgress >= 100) {
+                setTimeout(() => {
+                    document.getElementById('exploration-overlay').style.display = 'none';
+                    state.currentRouteIndex++;
+                    if (state.currentRouteIndex >= 5) toStep(6);
+                    else renderRouteCards();
+                }, 300);
+            }
         };
 
-        function initGrid() {
-            const grid = document.getElementById('inventory-grid');
-            grid.innerHTML = '';
-            state.cardLibrary.forEach(card => {
-                const count = state.inventory[card.id];
-                const isActive = count > 0;
-                
-                const cardEl = document.createElement('div');
-                cardEl.className = 'text-center';
-                cardEl.innerHTML = `
-                    <div class="aspect-[3/4] rounded-lg border-2 ${isActive ? 'border-[#8dae90] bg-white' : 'border-dashed border-[#d1ccb0] grayscale opacity-40'} flex flex-col items-center justify-center p-2 transition-all relative">
-                        ${card.rare ? '<span class="rare-badge">稀有</span>' : ''}
-                        <span class="text-2xl">${card.icon}</span>
-                        <p class="text-[10px] mt-1 font-bold">${card.name}</p>
-                        <div class="absolute -bottom-1 -right-1 bg-slate-800 text-white text-[9px] min-w-[15px] h-[15px] flex items-center justify-center rounded-full">${count}</div>
-                    </div>
-                    <button onclick="shareCard(${card.id})" class="text-[9px] mt-1 text-blue-500 underline ${isActive ? '' : 'hidden'}">分享足迹</button>
-                `;
-                grid.appendChild(cardEl);
-            });
-            updateSynthesisButton();
-        }
-
-        function completeTask(index) {
-            const btn = document.getElementById(`btn-task-${index}`);
-            btn.innerText = '已完成';
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-            
-            const reward = index === 3 ? 10 : 1;
-            state.chances += reward;
-            updateUI();
-            showMessage(`漫步充能成功！获得 ${reward} 次机会`);
-        }
-
-        function drawCard() {
-            if (state.chances <= 0) {
-                showMessage('漫步机会不足，去留下更多汗水吧！');
-                return;
-            }
-
-            const btn = document.getElementById('btn-draw');
-            btn.disabled = true;
-            state.chances--;
-            state.drawCountSinceRare++; // 增加保底计数
-            updateUI();
-
-            let selectedCard;
-
-            // 每10次必出一张稀有卡逻辑
-            if (state.drawCountSinceRare >= 10) {
-                selectedCard = state.cardLibrary.find(c => c.rare);
-            } else {
-                // 正常的权重抽奖
-                const totalWeight = state.cardLibrary.reduce((sum, c) => sum + c.weight, 0);
-                let random = Math.random() * totalWeight;
-                
-                for (let card of state.cardLibrary) {
-                    if (random < card.weight) {
-                        selectedCard = card;
-                        break;
-                    }
-                    random -= card.weight;
-                }
-            }
-
-            // 如果抽中了稀有卡，重置保底计数器
-            if (selectedCard.rare) {
-                state.drawCountSinceRare = 0;
-            }
-
-            const animCard = document.getElementById('draw-card-anim');
-            document.getElementById('result-icon').innerText = selectedCard.icon;
-            document.getElementById('result-name').innerText = selectedCard.name;
-
-            animCard.classList.add('is-flipped');
-
+        function drawFlight() {
+            const from = storyChain[state.currentIndex], to = storyChain[state.currentIndex + 1];
+            const dx = to.x - from.x, dy = to.y - from.y, dr = Math.sqrt(dx*dx+dy*dy);
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.classList.add('flight-path', 'flight-anim');
+            path.setAttribute('d', `M${from.x},${from.y} A${dr*0.8},${dr*0.8} 0 0,${dx > 0 ? 1 : 0} ${to.x},${to.y}`);
+            document.getElementById('flight-paths-layer').appendChild(path);
+            state.currentIndex++; state.currentRouteIndex = 0;
+            if (!state.completedIndices.includes(state.currentIndex)) state.completedIndices.push(state.currentIndex);
             setTimeout(() => {
-                showWinModal(selectedCard);
-                state.inventory[selectedCard.id]++;
-                initGrid();
-                setTimeout(() => {
-                    animCard.classList.remove('is-flipped');
-                    btn.disabled = false;
-                }, 1000);
-            }, 800);
+                document.getElementById('target-city-name').innerText = storyChain[state.currentIndex].name;
+                document.getElementById('target-city-desc').innerText = storyChain[state.currentIndex].desc;
+                toStep(4);
+            }, 2600);
         }
 
-        function synthesizePrize() {
-            const allCollected = state.cardLibrary.every(c => state.inventory[c.id] > 0);
-            if (!allCollected) return;
-            state.cardLibrary.forEach(c => state.inventory[c.id]--);
-            initGrid();
-            document.getElementById('success-modal').classList.remove('hidden');
+        function updateMapStatus() {
+            document.getElementById('city-count-display').innerText = `${state.completedIndices.length} / ${storyChain.length}`;
+            document.getElementById('current-city-label').innerText = `STATION: ${storyChain[state.currentIndex].name}`;
+            storyChain.forEach((city, i) => {
+                const node = document.getElementById(`node-${city.id}`);
+                if (node) {
+                    node.classList.remove('active', 'completed');
+                    if (i === state.currentIndex) node.classList.add('active');
+                    if (state.completedIndices.includes(i)) node.classList.add('completed');
+                }
+            });
         }
 
-        function shareCard(id) {
-            if (state.inventory[id] <= 0) return;
-            state.inventory[id]--;
-            initGrid();
-            showMessage(`已将足迹分享给好友`);
-        }
-
-        function updateUI() {
-            document.getElementById('chance-count').innerText = state.chances;
-            const collectedCount = state.cardLibrary.filter(c => state.inventory[c.id] > 0).length;
-            document.getElementById('collected-types').innerText = collectedCount;
-        }
-
-        function updateSynthesisButton() {
-            const allCollected = state.cardLibrary.every(c => state.inventory[c.id] > 0);
-            const btn = document.getElementById('btn-synthesize');
-            if (allCollected) {
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                btn.classList.add('bg-orange-500', 'shadow-lg');
-            } else {
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-                btn.classList.remove('bg-orange-500', 'shadow-lg');
-            }
-        }
-
-        function showWinModal(card) {
-            document.getElementById('modal-card-icon').innerText = card.icon;
-            document.getElementById('modal-card-name').innerText = card.name;
-            const tag = document.getElementById('modal-rare-tag');
-            card.rare ? tag.classList.remove('hidden') : tag.classList.add('hidden');
-            document.getElementById('win-modal').classList.remove('hidden');
-        }
-
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-        function showMessage(msg) {
-            const toast = document.createElement('div');
-            toast.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 bg-black/70 text-white px-6 py-2 rounded-full text-xs z-[100]';
-            toast.innerText = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
-        }
-
-        window.onload = () => { initGrid(); updateUI(); };
+        document.getElementById('btn-next-target').onclick = () => toStep(4);
+        window.onload = () => { initMap(); toStep(1); };
     </script>
 </body>
 </html>
