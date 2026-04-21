@@ -35,11 +35,9 @@
 
         .serif { font-family: 'Noto Serif SC', serif; }
 
-        /* 隐藏滚动条 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 全局场景切换 */
         .scene {
             position: fixed;
             inset: 0;
@@ -76,7 +74,6 @@
         }
         @keyframes scanMove { 0% { top: 0%; } 100% { top: 100%; } }
 
-        /* 手机端按钮 */
         .btn-luxury {
             position: relative;
             padding: 16px 32px;
@@ -92,7 +89,6 @@
         }
         .btn-luxury:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
 
-        /* 地图适配：手机端支持缩放与平移 */
         .map-viewport {
             width: 100%;
             height: 100%;
@@ -102,7 +98,7 @@
             justify-content: center;
         }
         .world-map-svg {
-            width: 180%; /* 在手机端默认略大于屏幕，增加探索感 */
+            width: 180%;
             max-width: none;
             height: auto;
             flex-shrink: 0;
@@ -128,7 +124,6 @@
         .flight-anim { animation: flyPath 2.8s forwards cubic-bezier(0.45, 0.05, 0.55, 0.95); }
         @keyframes flyPath { to { stroke-dashoffset: 0; } }
 
-        /* 路线列表条目 */
         .route-card {
             width: 100%;
             padding: 20px;
@@ -139,14 +134,11 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 12px;
-            transition: all 0.3s;
         }
         .route-card.locked { opacity: 0.25; filter: grayscale(1); }
         .route-card.active { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); }
-        .route-card.completed { border-color: rgba(45, 212, 191, 0.3); }
         .route-id { font-family: 'Noto Serif SC', serif; font-weight: 900; opacity: 0.2; font-size: 20px; margin-right: 15px; }
 
-        /* 实景挑战 */
         #exploration-overlay {
             display: none;
             position: fixed;
@@ -158,16 +150,6 @@
             justify-content: center;
             padding: 20px;
         }
-
-        .tag-float {
-            position: absolute;
-            font-size: 10px;
-            color: rgba(255,255,255,0.15);
-            animation: tagFloat 6s infinite ease-in-out;
-            pointer-events: none;
-            white-space: nowrap;
-        }
-        @keyframes tagFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
         .stamp-effect {
             border: 3px double #d9534f;
@@ -184,12 +166,11 @@
             gap: 6px;
             padding: 10px 18px;
             border-radius: 99px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 11px;
             letter-spacing: 1px;
-            transition: all 0.3s;
             cursor: pointer;
         }
     </style>
@@ -202,19 +183,14 @@
 
     <!-- STEP 1: 现实与觉醒 -->
     <section id="step-1" class="scene items-center justify-center p-10 text-center" style="display: flex; opacity: 1;">
-        <div class="tag-float" style="top: 10%; left: 5%;"># 钉在格子间的影子</div>
-        <div class="tag-float" style="top: 25%; right: 5%; animation-delay: 1s;"># 凌晨两点的加班费</div>
-        
         <div class="max-w-xs animate__animated animate__fadeIn">
             <h2 class="text-teal-400 text-[9px] tracking-[0.6em] mb-6 font-bold uppercase opacity-60">The World Calling</h2>
             <h1 class="serif text-4xl mb-10 leading-tight tracking-tighter text-white font-bold">跑遍全世界</h1>
-            
             <div class="space-y-6 text-gray-400 text-sm leading-relaxed mb-14 px-2">
-                <p>鼠标在无穷的像素间迁徙，<br>却从未触碰到真实的晚风。</p>
-                <p class="text-white opacity-90">你突然想起，十岁年指尖划过的地球仪，<br>那里装载过一整个星辰大海。</p>
-                <p>那些被琐事埋没的梦，<br>一站接一站，跑回来。</p>
+                <p>鼠标在无穷的像素间迁徙，却从未触碰到真实的晚风。</p>
+                <p class="text-white opacity-90">你突然想起，十岁年指尖划过的地球仪，那里装载过一整个星辰大海。</p>
+                <p>那些被琐事埋没的梦，一站接一站，跑回来。</p>
             </div>
-            
             <button onclick="toStep(2)" class="btn-luxury w-full">唤醒沉睡的步伐</button>
         </div>
     </section>
@@ -224,7 +200,6 @@
         <div class="w-full max-w-xs">
             <h2 class="serif text-3xl mb-4 text-center text-white tracking-tight">定义探索之眼</h2>
             <p class="text-gray-500 text-[11px] text-center mb-10">剥去职场身份，你希望如何重逢星球？</p>
-            
             <div class="space-y-4">
                 <button onclick="selectStyle('孤山隐士')" class="glass-panel w-full p-6 flex justify-between items-center group active:bg-white/5 transition-all">
                     <div class="text-left">
@@ -233,7 +208,6 @@
                     </div>
                     <div class="text-teal-400">→</div>
                 </button>
-
                 <button onclick="selectStyle('城市猎人')" class="glass-panel w-full p-6 flex justify-between items-center group active:bg-white/5 transition-all">
                     <div class="text-left">
                         <div class="font-bold text-lg text-white mb-1">城市猎人</div>
@@ -251,13 +225,8 @@
             <h2 class="serif text-5xl text-teal-400 font-black mb-1" id="city-count-display">1 / 14</h2>
             <p class="text-[9px] text-white/40 tracking-[0.3em] uppercase" id="current-city-label">Station: HANGZHOU</p>
         </div>
-        
         <div class="map-viewport no-scrollbar">
             <svg id="world-map" class="world-map-svg" viewBox="0 0 1000 500">
-                <g id="grid-layer" opacity="0.2">
-                    <path class="grid-line" d="M0,100 H1000 M0,200 H1000 M0,300 H1000 M0,400 H1000" stroke="white" stroke-width="0.3" stroke-dasharray="2 2" />
-                    <path class="grid-line" d="M200,0 V500 M400,0 V500 M600,0 V500 M800,0 V500" stroke="white" stroke-width="0.3" stroke-dasharray="2 2" />
-                </g>
                 <g id="land-layer">
                     <path class="continent" d="M100,100 L180,80 L220,100 L250,150 L230,220 L150,200 L120,150 Z" />
                     <path class="continent" d="M230,230 L300,280 L280,380 L240,400 L210,320 Z" />
@@ -269,7 +238,6 @@
                 <g id="nodes-layer"></g>
             </svg>
         </div>
-
         <div class="fixed bottom-12 left-0 w-full flex justify-center px-6 z-30">
             <button id="btn-next-target" class="btn-luxury w-full max-w-xs border-teal-400/20 text-teal-400 bg-teal-400/5 backdrop-blur-md">开启探索</button>
         </div>
@@ -283,29 +251,18 @@
                 返回地图
             </button>
         </div>
-
         <div class="max-w-xs text-center">
             <div class="inline-block px-3 py-1 border border-teal-500/10 text-teal-400 text-[8px] uppercase tracking-[0.4em] mb-8 rounded-full font-bold">New Realm Unlocked</div>
             <h2 id="target-city-name" class="serif text-6xl mb-10 tracking-tighter text-white font-black italic">杭州</h2>
-            <div class="relative py-4 mb-14">
-                <p id="target-city-desc" class="text-gray-400 text-xs leading-loose px-4 serif italic">
-                    凌晨三点的钱江新城，与其在PPT里虚构未来，不如去西湖烟雨中找回本色。这一站，不为绩效奔跑，只为找回那个鲜活的世界。
-                </p>
-            </div>
+            <p id="target-city-desc" class="text-gray-400 text-xs leading-loose px-4 serif italic mb-14"></p>
             <button onclick="toStep(5)" class="btn-luxury bg-white text-black font-bold w-full py-4 tracking-[0.4em] border-none">深入探索路线</button>
         </div>
     </section>
 
-    <!-- STEP 5: 路线挑战列表 -->
+    <!-- STEP 5: 路线列表 -->
     <section id="step-5" class="scene p-6 bg-black">
         <div class="w-full h-full flex flex-col relative pt-16">
-            <div class="absolute top-4 left-0">
-                <button onclick="toStep(3)" class="btn-back">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    返回地图
-                </button>
-            </div>
-
+            <div class="absolute top-4 left-0"><button onclick="toStep(3)" class="btn-back"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>返回地图</button></div>
             <header class="mb-8 flex justify-between items-end shrink-0">
                 <div>
                     <h3 class="serif text-3xl text-white font-bold">城市脉络</h3>
@@ -313,18 +270,13 @@
                 </div>
                 <div class="text-teal-400 text-xl font-black" id="route-stat">0 / 5</div>
             </header>
-            
-            <div id="route-cards-container" class="flex-1 flex flex-col overflow-y-auto pb-6 no-scrollbar pr-1">
-                <!-- 动态生成 -->
-            </div>
+            <div id="route-cards-container" class="flex-1 flex flex-col overflow-y-auto pb-6 no-scrollbar pr-1"></div>
         </div>
-
         <div id="exploration-overlay">
             <nav class="absolute top-6 w-full px-6 flex justify-between items-center z-50">
                 <button onclick="closeExploration()" class="text-[9px] text-white/40 uppercase tracking-widest border border-white/10 px-3 py-1.5 rounded-full">放弃</button>
-                <div id="explore-route-name" class="serif text-sm text-white italic">西湖：柳浪闻莺</div>
+                <div id="explore-route-name" class="serif text-sm text-white italic"></div>
             </nav>
-            
             <div class="relative z-10 text-center w-full max-w-xs">
                 <div class="mb-14">
                     <div class="text-6xl font-black text-teal-400 mb-4 tracking-tighter" id="explore-progress-text">0%</div>
@@ -339,35 +291,38 @@
         </div>
     </section>
 
-    <!-- STEP 6: 灵魂护照 -->
-    <section id="step-6" class="scene items-center justify-center p-6 bg-black/99">
-        <div class="glass-panel w-full max-w-xs p-10 animate__animated animate__zoomIn mb-12">
-            <div class="flex justify-between items-start mb-14">
+    <!-- STEP 6: 灵魂护照 & 下一站预告 -->
+    <section id="step-6" class="scene items-center justify-center p-6 bg-black/99 overflow-y-auto">
+        <!-- 护照卡片 -->
+        <div class="glass-panel w-full max-w-xs p-10 animate__animated animate__zoomIn mb-8 shrink-0">
+            <div class="flex justify-between items-start mb-10">
                 <span class="serif font-black italic text-2xl text-white">PASSPORT</span>
                 <span class="text-[9px] font-mono text-white/20">#VOID-233</span>
             </div>
-            
-            <div class="space-y-8 mb-10">
-                <div>
-                    <p class="text-[8px] text-gray-500 uppercase mb-2 tracking-[0.2em]">Spirit</p>
-                    <p id="user-style" class="serif text-xl font-bold text-white">---</p>
-                </div>
-                <div>
-                    <p class="text-[8px] text-gray-500 uppercase mb-2 tracking-[0.2em]">Unlocked</p>
-                    <p id="earned-city" class="serif text-2xl font-black italic text-teal-400">---</p>
-                </div>
-                <div class="pt-6 border-t border-dashed border-white/10 flex justify-center">
-                    <div id="stamp-box" class="stamp-effect font-black text-lg px-4 py-1">VALIDATED</div>
-                </div>
+            <div class="space-y-6 mb-8">
+                <div><p class="text-[8px] text-gray-500 uppercase mb-2">Spirit</p><p id="user-style" class="serif text-xl font-bold text-white">---</p></div>
+                <div><p class="text-[8px] text-gray-500 uppercase mb-2">Unlocked</p><p id="earned-city" class="serif text-2xl font-black italic text-teal-400">---</p></div>
+                <div class="pt-6 border-t border-dashed border-white/10 flex justify-center"><div id="stamp-box" class="stamp-effect font-black text-lg px-4 py-1">VALIDATED</div></div>
             </div>
         </div>
+
+        <!-- 下一站预告 -->
+        <div id="next-city-preview" class="w-full max-w-xs mb-10 text-center animate__animated animate__fadeInUp">
+            <div class="flex items-center justify-center gap-2 mb-3">
+                <div class="h-px w-8 bg-gradient-to-r from-transparent to-teal-500/50"></div>
+                <p class="text-[9px] text-teal-400 uppercase tracking-[0.3em] font-bold">Next Destination</p>
+                <div class="h-px w-8 bg-gradient-to-l from-transparent to-teal-500/50"></div>
+            </div>
+            <h4 id="next-city-name-display" class="serif text-2xl text-white font-black mb-3 italic tracking-tighter">---</h4>
+            <p id="next-city-short-desc" class="text-[10px] text-gray-500 leading-relaxed px-4 italic opacity-80">---</p>
+        </div>
         
-        <button id="btn-trigger-flight" class="btn-luxury w-full max-w-xs bg-white text-black font-bold border-none">跃迁至下一时空</button>
+        <button id="btn-trigger-flight" class="btn-luxury w-full max-w-xs bg-white text-black font-bold border-none shrink-0 mb-6">前往下一城市</button>
     </section>
 
     <script>
         const storyChain = [
-            { id: 'Hangzhou', name: '杭州', x: 800, y: 195, desc: '凌晨三点的钱江新城，与其在PPT里虚构未来，不如去西湖烟雨中找回本色。当断桥晨曦刺破薄雾，那个课本边缘画满航线的孩子，正等你重新出发。这一站，不为绩效奔跑，只为找回那个鲜活的世界。', routes: ['西湖：柳浪闻莺的千年呼吸', '龙井：云雾深处的龙踪拾遗', '灵隐：空山梵呗的灵魂禅步', '运河：流向繁华的旧梦长廊', '良渚：五千年文明的最初心跳'] },
+            { id: 'Hangzhou', name: '杭州', x: 800, y: 195, desc: '凌晨三点的钱江新城，与其在PPT里虚构未来，不如去西湖烟雨中找回本色。当断桥晨曦刺破薄雾，那个课本边缘画满航线的孩子，正等你重新出发。', routes: ['西湖：柳浪闻莺的千年呼吸', '龙井：云雾深处的龙踪拾遗', '灵隐：空山梵呗的灵魂禅步', '运河：流向繁华的旧梦长廊', '良渚：五千年文明的最初心跳'] },
             { id: 'Beijing', name: '北京', x: 790, y: 155, desc: '从中轴线的红墙出发，跨越千年的时空。这里的风吹过紫禁城，仿佛在告诉你：世界很大，不止方寸之间。', routes: ['中轴：皇城脊梁的威仪巡游', '故宫：斜阳下的红墙金瓦碎片', '昆明湖：皇家园林的晚风画卷', '万里：长城之上的骨骼与梦想', '什刹海：胡同里的市井烟火梦'] },
             { id: 'Seoul', name: '首尔', x: 820, y: 160, desc: '汉江的水映着现代霓虹。从古老的宫殿到动感的街头，你正踏入亚洲最富张力的心跳地带。', routes: ['汉江：晓月映照下的流感霓虹', '景福宫：岁月缝隙里的王朝叙事', '北村：韩屋脊岭间的古老呼吸', '南山：锁住永恒的塔尖光芒', '江南：全球节奏的最强鼓点'] },
             { id: 'Tokyo', name: '东京', x: 860, y: 180, desc: '涩谷十字路口的极速心跳，与银座的秩序感交织。霓虹熄灭后，我们将跨越海峡。', routes: ['涩谷：亿万人潮流中的孤独漂流', '银座：极致物欲后的审美秩序', '上野：在落樱中寻找片刻禅机', '新宿：24小时不眠的迷宫之眼', '千代田：皇居护城河的静谧屏息'] },
@@ -408,16 +363,36 @@
                 setTimeout(() => target.style.opacity = '1', 50);
 
                 if (num === 3) updateMapStatus();
+                if (num === 4) {
+                    const city = storyChain[state.currentIndex];
+                    document.getElementById('target-city-name').innerText = city.name;
+                    document.getElementById('target-city-desc').innerText = city.desc;
+                }
                 if (num === 5) renderRouteCards();
                 if (num === 6) {
-                    document.getElementById('earned-city').innerText = storyChain[state.currentIndex].name + '站';
+                    const city = storyChain[state.currentIndex];
+                    document.getElementById('earned-city').innerText = city.name + '站';
                     const stamp = document.getElementById('stamp-box');
                     stamp.classList.remove('stamp-active');
                     setTimeout(() => stamp.classList.add('stamp-active'), 400);
-                    document.getElementById('btn-trigger-flight').onclick = () => {
-                        if (state.currentIndex === storyChain.length - 1) location.reload();
-                        else { toStep(3); setTimeout(drawFlight, 600); }
-                    };
+
+                    // 下一城市预告逻辑
+                    const nextCity = storyChain[state.currentIndex + 1];
+                    const previewArea = document.getElementById('next-city-preview');
+                    const triggerBtn = document.getElementById('btn-trigger-flight');
+
+                    if (nextCity) {
+                        previewArea.style.display = 'block';
+                        document.getElementById('next-city-name-display').innerText = nextCity.name;
+                        // 截取前35个字作为预告
+                        document.getElementById('next-city-short-desc').innerText = nextCity.desc.substring(0, 35) + '...';
+                        triggerBtn.innerText = '前往下一城市';
+                        triggerBtn.onclick = () => { toStep(3); setTimeout(drawFlight, 600); };
+                    } else {
+                        previewArea.style.display = 'none';
+                        triggerBtn.innerText = '完成环球长跑';
+                        triggerBtn.onclick = () => location.reload();
+                    }
                 }
                 gate.style.opacity = '0';
             }, 400);
@@ -456,7 +431,7 @@
         }
 
         document.getElementById('tap-run-btn').onclick = () => {
-            state.exploreProgress += 20;
+            state.exploreProgress += 25;
             updateExploreUI();
             if (state.exploreProgress >= 100) {
                 setTimeout(() => {
@@ -470,6 +445,7 @@
 
         function drawFlight() {
             const from = storyChain[state.currentIndex], to = storyChain[state.currentIndex + 1];
+            if (!to) return;
             const dx = to.x - from.x, dy = to.y - from.y, dr = Math.sqrt(dx*dx+dy*dy);
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.classList.add('flight-path', 'flight-anim');
@@ -477,11 +453,7 @@
             document.getElementById('flight-paths-layer').appendChild(path);
             state.currentIndex++; state.currentRouteIndex = 0;
             if (!state.completedIndices.includes(state.currentIndex)) state.completedIndices.push(state.currentIndex);
-            setTimeout(() => {
-                document.getElementById('target-city-name').innerText = storyChain[state.currentIndex].name;
-                document.getElementById('target-city-desc').innerText = storyChain[state.currentIndex].desc;
-                toStep(4);
-            }, 2600);
+            setTimeout(() => toStep(4), 2600);
         }
 
         function updateMapStatus() {
