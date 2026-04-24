@@ -20,7 +20,7 @@
 
         * {
             -webkit-tap-highlight-color: transparent;
-            touch-action: none; /* 禁用默认手势以支持自定义拖拽 */
+            touch-action: none; 
         }
 
         body {
@@ -37,6 +37,11 @@
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 自定义日志滚动条 - 极简工业感 */
+        .log-scrollbar::-webkit-scrollbar { width: 2px; }
+        .log-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        .log-scrollbar::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; opacity: 0.5; }
 
         .scene {
             position: fixed;
@@ -87,6 +92,7 @@
             text-align: center;
             transition: all 0.3s;
             cursor: pointer;
+            touch-action: auto;
         }
         .btn-luxury:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
 
@@ -106,7 +112,6 @@
         .world-map-svg {
             width: 240%;
             height: auto;
-            /* 移除 transition 以便拖拽时实时响应，自动聚焦时会由 JS 控制 */
             will-change: transform;
         }
         @media (min-width: 768px) {
@@ -166,37 +171,38 @@
         }
         .inner-voice-bar p { font-size: 11px; color: #fff; opacity: 0.8; font-style: italic; }
 
+        /* 航行日志：固定高度并支持内部滑动 */
         .mission-log {
             position: absolute;
             bottom: 115px;
             left: 24px;
-            width: 230px;
+            width: 240px;
             padding: 15px;
             font-family: 'Courier New', Courier, monospace;
-            background: rgba(0,0,0,0.7);
-            border: 1px solid rgba(45, 212, 191, 0.15);
+            background: rgba(0,0,0,0.85);
+            border: 1px solid rgba(45, 212, 191, 0.25);
             border-radius: 12px;
             font-size: 9px;
             color: rgba(255, 255, 255, 0.5);
-            pointer-events: none;
             z-index: 25;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+            backdrop-filter: blur(15px);
+            touch-action: pan-y; 
         }
-        .mission-log::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(0deg, transparent 0%, rgba(45, 212, 191, 0.03) 50%, transparent 100%);
-            animation: logScan 4s infinite linear;
+        .log-header { padding-bottom: 8px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .log-line { margin-bottom: 4px; display: flex; gap: 8px; align-items: center; }
+        .log-tag { color: var(--accent); font-weight: bold; min-width: 55px; }
+        .log-val { color: #fff; font-weight: bold; }
+        .log-history-area {
+            max-height: 110px;
+            overflow-y: auto;
+            padding-right: 5px;
         }
-        @keyframes logScan { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
-
-        .log-line { margin-bottom: 5px; display: flex; gap: 8px; align-items: center; }
-        .log-tag { color: var(--accent); font-weight: bold; min-width: 60px; }
-        .log-val { color: #fff; }
-        .log-cursor { display: inline-block; width: 6px; height: 10px; background: var(--accent); animation: blink 1s infinite; vertical-align: middle; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .log-entry { margin-bottom: 10px; opacity: 0.95; border-left: 1px solid rgba(45,212,191,0.3); padding-left: 10px; position: relative; }
+        .log-entry::before { content: ''; position: absolute; left: -3px; top: 0; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; }
+        .log-entry-time { color: var(--accent); font-size: 7px; margin-bottom: 2px; font-weight: bold; }
+        .log-entry-content { line-height: 1.5; color: rgba(255,255,255,0.9); word-break: break-all; }
+        .log-highlight { color: var(--accent); font-weight: bold; border-bottom: 1px solid rgba(45, 212, 191, 0.3); }
 
         .route-card {
             width: 100%; padding: 10px; border-radius: 1.2rem;
@@ -283,8 +289,8 @@
                 <div class="hud-station uppercase" id="current-city-label">STATION: HANGZHOU</div>
             </div>
             <div class="text-right">
-                <div class="text-[8px] text-white/20 font-mono">COORD_SYS: WGS84</div>
-                <div class="text-[8px] text-white/20 font-mono">STATUS: ACTIVE</div>
+                <div class="text-[8px] text-white/20 font-mono">TRACE_LOG: ACTIVE</div>
+                <div class="text-[8px] text-white/20 font-mono">COORD: REALTIME</div>
             </div>
         </header>
 
@@ -292,15 +298,16 @@
             <p id="thought-content">"西湖的晨曦，比屏幕亮多了。"</p>
         </div>
 
+        <!-- 航行日志：可滑动查看详细捕获记录 -->
         <div class="mission-log animate__animated animate__fadeInUp" style="animation-delay: 0.5s;">
-            <div class="log-line"><span class="log-tag">MISSION</span> <span class="log-val" id="log-mission-id">REAWAKEN_001</span></div>
-            <div class="log-line"><span class="log-tag">COORD</span> <span class="log-val" id="log-coords">30.27N / 120.15E</span></div>
-            <div class="log-line"><span class="log-tag">PULSE</span> <span class="log-val" id="log-pulse">72 BPM</span></div>
-            <div class="log-line"><span class="log-tag">STATUS</span> <span class="log-val">ACTIVE <span class="inline-block w-2 h-2 bg-teal-400 rounded-full animate-pulse ml-1"></span></span></div>
-            <div class="mt-3 pt-3 border-t border-white/10 text-white/70" id="log-report-text">
-                [SYSTEM] 正在同步大气指数...
+            <div class="log-header">
+                <div class="log-line"><span class="log-tag">POSITION</span> <span class="log-val" id="log-coords">30.27N / 120.15E</span></div>
+                <div class="log-line"><span class="log-tag">STATUS</span> <span class="log-val">ACTIVE <span class="inline-block w-1.5 h-1.5 bg-teal-400 rounded-full animate-pulse ml-1"></span></span></div>
             </div>
-            <div class="log-cursor"></div>
+            
+            <div class="log-history-area log-scrollbar" id="log-history-container">
+                <!-- 记录跑过的城市和具体路线 -->
+            </div>
         </div>
         
         <div class="map-viewport" id="map-viewport">
@@ -405,20 +412,20 @@
     <script>
         const storyChain = [
             { id: 'Hangzhou', name: '杭州', x: 800, y: 195, lat: '30.27N', lng: '120.15E', thought: '西湖的晨曦，比屏幕亮多了。', log: '西湖水汽充足，适宜奔跑。这是梦醒的第一站。', desc: '凌晨三点的钱江新城，与其在PPT里虚构未来，不如去西湖烟雨中找回本色。', routes: ['西湖：柳浪闻莺', '龙井：云雾深处', '灵隐：空山梵呗', '运河：旧梦长廊', '良渚：最初心跳'], routeImages: ['https://images.unsplash.com/photo-1599591452655-08e08d6d6da7?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1543161353-85f403f2956c?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1597523910901-526462725838?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1590487988256-9ed24133863e?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1563242080-87a2688b146f?w=200&h=200&fit=crop'] },
-            { id: 'Beijing', name: '北京', x: 790, y: 155, lat: '39.90N', lng: '116.40E', thought: '红墙下的风，带着几千年的重量。', log: '历史的脉搏正在脚下加速。注意：中轴线坐标点磁场异常波动。', desc: '从中轴线的红墙出发，跨越千年的时空。这里的风仿佛在告诉你：世界很大。', routes: ['中轴威仪', '故宫斜阳', '皇家晚风', '长城脊梁', '什刹烟火'], routeImages: ['https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1555505012-320485675e87?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1529921879218-f99546d03a9d?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1536647245842-8820c7844062?w=200&h=200&fit=crop'] },
-            { id: 'Seoul', name: '首尔', x: 820, y: 160, lat: '37.56N', lng: '126.97E', thought: '霓虹闪烁得让人想跳舞。', log: '检测到强烈的现代审美脉冲。建议提升步伐频率以共鸣节奏。', desc: '汉江的水映着现代霓虹。从古老的宫殿到动感的街头。', routes: ['汉江晓月', '景福宫阙', '北村古意', '南山塔影', '江南律动'], routeImages: ['https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1524311588144-839070381f21?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1476357471311-43c0db9fb2b4?w=200&h=200&fit=crop'] },
-            { id: 'Tokyo', name: '东京', x: 860, y: 180, lat: '35.68N', lng: '139.65E', thought: '在一亿人里漂流，也是一种自由。', log: '银座秩序良好。由于人潮密度过高，系统开启自动避让模式。', desc: '涩谷十字路口的极速心跳，与银座的秩序感交织。', routes: ['涩谷穿行', '银座霓虹', '上野落樱', '新宿之眼', '千代田风'], routeImages: ['https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1554797589-7241bb691973?w=200&h=200&fit=crop'] },
-            { id: 'Taipei', name: '台北', x: 815, y: 235, lat: '25.03N', lng: '121.56E', thought: '烟火气里藏着最温柔的告别。', log: '象山视角极其开阔。海拔攀升中，呼吸系统需配合。', desc: '101的摩天高度下藏着巷弄里的温润。', routes: ['台北101', '士林烟火', '淡水暮色', '九份山径', '象山远眺'], routeImages: ['https://images.unsplash.com/photo-1552912110-67259461280b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1534008757030-27299c4371b6?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1533227268408-a774655d8c3b?w=200&h=200&fit=crop'] },
-            { id: 'Singapore', name: '新加坡', x: 765, y: 345, lat: '1.35N', lng: '103.81E', thought: '赛博森林里的每片叶子都在呼吸。', log: '滨海湾光能转换中。大气湿度 85%，适合长距离巡航。', desc: '花园城市的热带森林是奇迹。', routes: ['滨海湾光', '圣淘沙浪', '牛车水韵', '克拉码头', '鱼尾狮印'], routeImages: ['https://images.unsplash.com/photo-1525625230556-8e8b8e96978e?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1558231261-26922a00f2e0?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1543833078-05500ce793e8?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1510009489794-352fba39acd3?w=200&h=200&fit=crop'] },
-            { id: 'Sydney', name: '悉尼', x: 840, y: 445, lat: '33.86S', lng: '151.20E', thought: '白色风帆，是给大洋的情书。', log: '海港大桥已开放。检测到海风阻力增加，启动破风步行方案。', desc: '歌剧院的风帆正被海风吹动。穿过太平洋。', routes: ['歌剧风帆', '海港大桥', '邦迪海滩', '达令港湾', '岩石区影'], routeImages: ['https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1524820197278-540916411e20?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1528072164453-f4e8ef0d475a?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=200&h=200&fit=crop'] },
-            { id: 'Rio', name: '里约', x: 280, y: 360, lat: '22.90S', lng: '43.17W', thought: '在上帝注视下，跳一支狂野的舞。', log: '沙滩狂欢周期。多巴胺水平攀升预警。', desc: '基督像俯瞰着舞步。一路向北。', routes: ['基督之光', '面包山脊', '萨巴律动', '科帕海滩', '贫民窟画'], routeImages: ['https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1516306580123-e6e52b1b7b5f?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1490604001847-b712b0c2f967?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1591461530184-e9be75cc4013?w=200&h=200&fit=crop'] },
-            { id: 'NewYork', name: '纽约', x: 235, y: 145, lat: '40.71N', lng: '74.00W', thought: '时代广场的灯光，不曾照亮我的孤独。', log: '华尔街步频新高。系统已开启全球金融区低延迟监控模式。', desc: '时代广场的灯火永不熄灭。在大楼丛林里奔跑。', routes: ['时代广场', '中央公园', '布鲁克林', '华尔街风', '自由之火'], routeImages: ['https://images.unsplash.com/photo-1496871455396-14e56815f1f4?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1516339901600-2e1a62dc0c45?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?w=200&h=200&fit=crop'] },
-            { id: 'Chicago', name: '芝加哥', x: 205, y: 140, lat: '41.87N', lng: '87.62W', thought: '在银色的“豆子”里，我看见了梦。', log: '林肯公园已就绪。气流紊乱，注意保持核心稳定。', desc: '风之城的云门镜像里，编织出硬核的都市梦。', routes: ['云门镜像', '海军码头', '密歇根道', '威利斯高', '林肯公园'], routeImages: ['https://images.unsplash.com/photo-1494522855154-9297ac14b55f?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1471306224500-6d0d218be372?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1490644659542-bc393ef847c2?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1490131411312-b2ee2fe9da12?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1444212477490-ca407925329e?w=200&h=200&fit=crop'] },
-            { id: 'LosAngeles', name: '洛杉矶', x: 145, y: 185, lat: '34.05N', lng: '118.24W', thought: '星光大道上的名字都不如晚霞灿烂。', log: '天文台适合冥想。曝光补偿已调整，记录当前梦幻紫景观。', desc: '太平洋巨浪拍打星光大道。横跨大西洋开启篇章。', routes: ['好莱坞星', '圣莫尼卡', '比弗利山', '天文台影', '曼巴精神'], routeImages: ['https://images.unsplash.com/photo-1541336032412-2048a678540d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1502899576159-f224dc23efb7?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1506377247377-2a5b3b0ca7df?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1445011713480-77a837ca7f7c?w=200&h=200&fit=crop'] },
-            { id: 'London', name: '伦敦', x: 470, y: 110, lat: '51.50N', lng: '0.12W', thought: '大本钟再准时，也唤不回童年。', log: '国王十字站台魔力溢出。泰晤士河湿气重，适宜深度思考。', desc: '泰晤士河的雾气笼罩着大本钟。从绅士步伐出发。', routes: ['大本钟声', '塔桥落日', '海德晨跑', '西区魅影', '国王十字'], routeImages: ['https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=200&h=200&fit=crop'] },
-            { id: 'Paris', name: '巴黎', x: 480, y: 130, lat: '48.85N', lng: '2.35E', thought: '塞纳河的倒影里，有流动的盛宴。', log: '铁塔坐标已锁定。浪漫因子浓度超标，情绪稳定中。', desc: '在香榭丽舍的落日里奔跑，感受“流动的盛宴”。', routes: ['铁塔流光', '卢浮寻宝', '蒙马特影', '塞纳河畔', '凯旋之火'], routeImages: ['https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1509439581779-6298f75bf6e5?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1549421263-524682497658?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1520939817794-069663740906?w=200&h=200&fit=crop'] },
-            { id: 'Rome', name: '罗马', x: 495, y: 155, lat: '41.90N', lng: '12.49E', thought: '废墟里的沙曾见证一个帝国。', log: '万神殿光线极佳。注意：石板跑道起伏，调整避震参数。', desc: '条条大路通罗马。在古竞技场的残垣下感受历史。', routes: ['竞技遗响', '万神殿光', '许愿池影', '梵蒂冈门', '台伯河边'], routeImages: ['https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1529260830199-42c24126f198?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1515542641795-06ed223c3bd2?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1525874684015-58379d421a52?w=200&h=200&fit=crop'] },
-            { id: 'CapeTown', name: '开普敦', x: 520, y: 440, lat: '33.92S', lng: '18.42E', thought: '世界尽头的风吹熄了所有焦躁。', log: '灵魂共鸣最高等级。抵达世界尽头。', desc: '桌山的云海交汇于大西洋。当你抵达这里梦从未离开。', routes: ['桌山云海', '好望角风', '罗本岛思', '信号山火', '海滨广场'], routeImages: ['https://images.unsplash.com/photo-1580193703491-3e58c6af1506?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1576485736318-7b9ca4e1a742?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1580611417532-60193703491c?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?w=200&h=200&fit=crop'] }
+            { id: 'Beijing', name: '北京', x: 790, y: 155, lat: '39.90N', lng: '116.40E', thought: '红墙下的风，带着几千年的重量。', log: '历史的脉搏正在脚下加速。中轴线磁场平稳。', desc: '从中轴线的红墙出发，跨越千年的时空。这里的风仿佛在告诉你：世界很大。', routes: ['中轴威仪', '故宫斜阳', '皇家晚风', '长城脊梁', '什刹烟火'], routeImages: ['https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1555505012-320485675e87?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1529921879218-f99546d03a9d?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1536647245842-8820c7844062?w=200&h=200&fit=crop'] },
+            { id: 'Seoul', name: '首尔', x: 820, y: 160, lat: '37.56N', lng: '126.97E', thought: '霓虹闪烁得让人想跳舞。', log: '检测到强烈的现代审美脉冲。汉江水位正常。', desc: '汉江的水映着现代霓虹。从古老的宫殿到动感的街头。', routes: ['汉江晓月', '景福宫阙', '北村古意', '南山塔影', '江南律动'], routeImages: ['https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1524311588144-839070381f21?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1476357471311-43c0db9fb2b4?w=200&h=200&fit=crop'] },
+            { id: 'Tokyo', name: '东京', x: 860, y: 180, lat: '35.68N', lng: '139.65E', thought: '在一亿人里漂流，也是一种自由。', log: '银座秩序良好。涩谷人潮活跃。', desc: '涩谷十字路口的极速心跳，与银座的秩序感交织。', routes: ['涩谷穿行', '银座霓虹', '上野落樱', '新宿之眼', '千代田风'], routeImages: ['https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1554797589-7241bb691973?w=200&h=200&fit=crop'] },
+            { id: 'Taipei', name: '台北', x: 815, y: 235, lat: '25.03N', lng: '121.56E', thought: '烟火气里藏着最温柔的告别。', log: '象山视角极其开阔。', desc: '101的摩天高度下藏着巷弄里的温润。', routes: ['台北101', '士林烟火', '淡水暮色', '九份山径', '象山远眺'], routeImages: ['https://images.unsplash.com/photo-1552912110-67259461280b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1534008757030-27299c4371b6?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1533227268408-a774655d8c3b?w=200&h=200&fit=crop'] },
+            { id: 'Singapore', name: '新加坡', x: 765, y: 345, lat: '1.35N', lng: '103.81E', thought: '赛博森林里的每片叶子都在呼吸。', log: '滨海湾光能转换中。', desc: '花园城市的热带森林是奇迹。', routes: ['滨海湾光', '圣淘沙浪', '牛车水韵', '克拉码头', '鱼尾狮印'], routeImages: ['https://images.unsplash.com/photo-1525625230556-8e8b8e96978e?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1558231261-26922a00f2e0?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1543833078-05500ce793e8?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1510009489794-352fba39acd3?w=200&h=200&fit=crop'] },
+            { id: 'Sydney', name: '悉尼', x: 840, y: 445, lat: '33.86S', lng: '151.20E', thought: '白色风帆，是给大洋的情书。', log: '海港大桥已开放。', desc: '歌剧院的风帆正被海风吹动。穿过太平洋。', routes: ['歌剧风帆', '海港大桥', '邦迪海滩', '达令港湾', '岩石区影'], routeImages: ['https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1524820197278-540916411e20?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1528072164453-f4e8ef0d475a?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=200&h=200&fit=crop'] },
+            { id: 'Rio', name: '里约', x: 280, y: 360, lat: '22.90S', lng: '43.17W', thought: '在上帝注视下，跳一支狂野的舞。', log: '沙滩狂欢周期。', desc: '基督像俯瞰着舞步。', routes: ['基督之光', '面包山脊', '萨巴律动', '科帕海滩', '贫民窟画'], routeImages: ['https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1516306580123-e6e52b1b7b5f?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1490604001847-b712b0c2f967?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1591461530184-e9be75cc4013?w=200&h=200&fit=crop'] },
+            { id: 'NewYork', name: '纽约', x: 235, y: 145, lat: '40.71N', lng: '74.00W', thought: '时代广场的灯光，不曾照亮我的孤独。', log: '华尔街步频新高。', desc: '时代广场的灯火永不熄灭。在大楼丛林里奔跑。', routes: ['时代广场', '中央公园', '布鲁克林', '华尔街风', '自由之火'], routeImages: ['https://images.unsplash.com/photo-1496871455396-14e56815f1f4?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1516339901600-2e1a62dc0c45?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?w=200&h=200&fit=crop'] },
+            { id: 'Chicago', name: '芝加哥', x: 205, y: 140, lat: '41.87N', lng: '87.62W', thought: '在银色的“豆子”里，我看见了梦。', log: '林肯公园已就绪。', desc: '风之城的云门镜像里，编织出硬核的都市梦。', routes: ['云门镜像', '海军码头', '密歇根道', '威利斯高', '林肯公园'], routeImages: ['https://images.unsplash.com/photo-1494522855154-9297ac14b55f?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1471306224500-6d0d218be372?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1490644659542-bc393ef847c2?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1490131411312-b2ee2fe9da12?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1444212477490-ca407925329e?w=200&h=200&fit=crop'] },
+            { id: 'LosAngeles', name: '洛杉矶', x: 145, y: 185, lat: '34.05N', lng: '118.24W', thought: '星光大道上的名字都不如晚霞灿烂。', log: '天文台适合冥想。', desc: '太平洋巨浪拍打星光大道。', routes: ['好莱坞星', '圣莫尼卡', '比弗利山', '天文台影', '曼巴精神'], routeImages: ['https://images.unsplash.com/photo-1541336032412-2048a678540d?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1502899576159-f224dc23efb7?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1506377247377-2a5b3b0ca7df?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1445011713480-77a837ca7f7c?w=200&h=200&fit=crop'] },
+            { id: 'London', name: '伦敦', x: 470, y: 110, lat: '51.50N', lng: '0.12W', thought: '大本钟再准时，也唤不回童年。', log: '国王十字站台魔力溢出。', desc: '泰晤士河的雾气笼罩着大本钟。从绅士步伐出发。', routes: ['大本钟声', '塔桥落日', '海德晨跑', '西区魅影', '国王十字'], routeImages: ['https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=200&h=200&fit=crop'] },
+            { id: 'Paris', name: '巴黎', x: 480, y: 130, lat: '48.85N', lng: '2.35E', thought: '塞纳河的倒影里，有流动的盛宴。', log: '铁塔坐标已锁定。', desc: '在香榭丽舍的落日里奔跑，感受“流动的盛宴”。', routes: ['铁塔流光', '卢浮寻宝', '蒙马特影', '塞纳河畔', '凯旋之火'], routeImages: ['https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1509439581779-6298f75bf6e5?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1549421263-524682497658?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1520939817794-069663740906?w=200&h=200&fit=crop'] },
+            { id: 'Rome', name: '罗马', x: 495, y: 155, lat: '41.90N', lng: '12.49E', thought: '废墟里的沙曾见证一个帝国。', log: '万神殿光线极佳。', desc: '条条大路通罗马。', routes: ['竞技遗响', '万神殿光', '许愿池影', '梵帝冈门', '台伯河边'], routeImages: ['https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1529260830199-42c24126f198?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1515542641795-06ed223c3bd2?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1525874684015-58379d421a52?w=200&h=200&fit=crop'] },
+            { id: 'CapeTown', name: '开普敦', x: 520, y: 440, lat: '33.92S', lng: '18.42E', thought: '世界尽头的风吹熄了所有焦躁。', log: '抵达世界尽头。', desc: '桌山的云海交汇于大西洋。', routes: ['桌山云海', '好望角风', '罗本岛思', '信号山火', '海滨广场'], routeImages: ['https://images.unsplash.com/photo-1580193703491-3e58c6af1506?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1576485736318-7b9ca4e1a742?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1580611417532-60193703491c?w=200&h=200&fit=crop', 'https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?w=200&h=200&fit=crop'] }
         ];
 
         let state = { 
@@ -427,9 +434,9 @@
             completedIndices: [0], 
             style: '自由跑者', 
             exploreProgress: 0, 
-            pulse: 72,
             mapPos: { x: 0, y: 0, scale: 1.4 },
-            drag: { isDragging: false, startX: 0, startY: 0, initialX: 0, initialY: 0 }
+            drag: { isDragging: false, startX: 0, startY: 0, initialX: 0, initialY: 0 },
+            lastLoggedCityIndex: -1 // 修复重复提醒的追踪器
         };
 
         function initMap() {
@@ -443,21 +450,10 @@
                 g.innerHTML = `<circle cx="${city.x}" cy="${city.y}" r="4" /><text x="${city.x + 12}" y="${city.y + 4}" fill="white" font-size="8" opacity="0.4" font-weight="bold">${city.name}</text>`;
                 nodes.appendChild(g);
             });
-            
-            setInterval(() => {
-                const p = document.getElementById('log-pulse');
-                if (p) {
-                    const variance = Math.floor(Math.random() * 5) - 2;
-                    state.pulse = Math.max(65, Math.min(130, state.pulse + variance));
-                    p.innerText = `${state.pulse} BPM`;
-                }
-            }, 2000);
-
-            setupMapDragging();
+            setupMapInteractions();
         }
 
-        // 地图滑动交互实现
-        function setupMapDragging() {
+        function setupMapInteractions() {
             const viewport = document.getElementById('map-viewport');
             const mapSvg = document.getElementById('world-map');
 
@@ -468,7 +464,7 @@
                 state.drag.startY = point.clientY;
                 state.drag.initialX = state.mapPos.x;
                 state.drag.initialY = state.mapPos.y;
-                mapSvg.style.transition = 'none'; // 拖拽时禁用平滑过渡以实时响应
+                mapSvg.style.transition = 'none';
             };
 
             const moveDrag = (e) => {
@@ -476,24 +472,54 @@
                 const point = e.touches ? e.touches[0] : e;
                 const dx = (point.clientX - state.drag.startX) / (window.innerWidth / 1000);
                 const dy = (point.clientY - state.drag.startY) / (window.innerHeight / 500);
-                
                 state.mapPos.x = state.drag.initialX + dx;
                 state.mapPos.y = state.drag.initialY + dy;
-                
                 updateMapTransform();
             };
 
             const endDrag = () => {
                 state.drag.isDragging = false;
-                mapSvg.style.transition = 'transform 1.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                mapSvg.style.transition = 'transform 1s cubic-bezier(0.4, 0, 0.2, 1)';
             };
 
+            viewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                state.mapPos.scale = Math.max(0.5, Math.min(8, state.mapPos.scale * delta));
+                updateMapTransform();
+            }, { passive: false });
+
+            let lastTouchDistance = 0;
+            viewport.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2) {
+                    const dx = e.touches[0].pageX - e.touches[1].pageX;
+                    const dy = e.touches[0].pageY - e.touches[1].pageY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (lastTouchDistance > 0) {
+                        const delta = distance / lastTouchDistance;
+                        state.mapPos.scale = Math.max(0.5, Math.min(10, state.mapPos.scale * delta));
+                        updateMapTransform();
+                    }
+                    lastTouchDistance = distance;
+                } else {
+                    moveDrag(e);
+                }
+            }, { passive: false });
+
+            viewport.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    const dx = e.touches[0].pageX - e.touches[1].pageX;
+                    const dy = e.touches[0].pageY - e.touches[1].pageY;
+                    lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+                } else {
+                    startDrag(e);
+                }
+            });
+
+            viewport.addEventListener('touchend', () => { lastTouchDistance = 0; endDrag(); });
             viewport.addEventListener('mousedown', startDrag);
             window.addEventListener('mousemove', moveDrag);
             window.addEventListener('mouseup', endDrag);
-            viewport.addEventListener('touchstart', startDrag, { passive: false });
-            window.addEventListener('touchmove', moveDrag, { passive: false });
-            window.addEventListener('touchend', endDrag);
         }
 
         function updateMapTransform() {
@@ -503,16 +529,37 @@
             }
         }
 
-        function typeWriter(text, elementId) {
-            const el = document.getElementById(elementId);
+        function typeWriter(text, elOrId, callback) {
+            const el = typeof elOrId === 'string' ? document.getElementById(elOrId) : elOrId;
             if (!el) return;
             el.innerHTML = '';
             let i = 0;
             const timer = setInterval(() => {
                 el.innerHTML += text.charAt(i);
                 i++;
-                if (i >= text.length) clearInterval(timer);
-            }, 40);
+                if (i >= text.length) { 
+                    clearInterval(timer); 
+                    if(callback) callback(el); 
+                }
+            }, 30);
+        }
+
+        function pushLog(logText, tag = 'STATION') {
+            const container = document.getElementById('log-history-container');
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry animate__animated animate__fadeIn';
+            logEntry.innerHTML = `<div class="log-entry-time">[${time}] ${tag}</div><div class="log-entry-content" id="typing-content-latest"></div>`;
+            container.appendChild(logEntry);
+            container.scrollTop = container.scrollHeight;
+            
+            const contentEl = logEntry.querySelector('#typing-content-latest');
+            typeWriter(logText, contentEl, (el) => {
+                el.id = ''; 
+                const formatted = logText.replace(/<(.+?)>/g, '<span class="log-highlight">$1</span>');
+                el.innerHTML = formatted;
+            });
         }
 
         function toStep(num) {
@@ -615,6 +662,12 @@
             if (state.exploreProgress >= 100) {
                 setTimeout(() => {
                     document.getElementById('exploration-overlay').style.display = 'none';
+                    
+                    const currentCity = storyChain[state.currentIndex];
+                    const routeName = currentCity.routes[state.currentRouteIndex];
+                    // 更新：已完成路线 文案
+                    pushLog(`已完成路线: <${routeName}>`, 'CAPTURED');
+
                     state.currentRouteIndex++;
                     if (state.currentRouteIndex >= 5) toStep(6);
                     else renderRouteCards();
@@ -647,34 +700,26 @@
             const city = storyChain[state.currentIndex];
             if (!city) return;
             
-            const countDisplay = document.getElementById('city-count-display');
-            if (countDisplay) countDisplay.innerText = `${state.completedIndices.length} / ${storyChain.length}`;
+            document.getElementById('city-count-display').innerText = `${state.completedIndices.length} / ${storyChain.length}`;
+            document.getElementById('current-city-label').innerText = `STATION: ${city.name}`;
+            document.getElementById('log-coords').innerText = `${city.lat} / ${city.lng}`;
             
-            const labelDisplay = document.getElementById('current-city-label');
-            if (labelDisplay) labelDisplay.innerText = `STATION: ${city.name}`;
+            // 修复：返回地图时不用重复提醒（通过 lastLoggedCityIndex 判断）
+            if (state.lastLoggedCityIndex !== state.currentIndex) {
+                pushLog(`已降落目的地 ${city.name}。系统提示: ${city.log}`, 'STATION');
+                state.lastLoggedCityIndex = state.currentIndex;
+            }
             
-            const logId = document.getElementById('log-mission-id');
-            if (logId) logId.innerText = `REAWAKEN_0${state.completedIndices.length}`;
-            
-            const logCoords = document.getElementById('log-coords');
-            if (logCoords) logCoords.innerText = `${city.lat} / ${city.lng}`;
-            
-            const logDay = document.getElementById('log-day');
-            if (logDay) logDay.innerHTML = `<span class="log-tag">DAY</span> 0${state.completedIndices.length * 2 + 1}`;
-            
-            typeWriter(`[REPORT] ${city.log || '正在同步...'}`, 'log-report-text');
-            
-            const thoughtContent = document.getElementById('thought-content');
-            if (thoughtContent) thoughtContent.innerText = `"${city.thought || '...'}"`;
+            document.getElementById('thought-content').innerText = `"${city.thought || '...'}"`;
 
-            // 自动聚焦城市
+            // 自动聚焦
             const tx = (500 - city.x * state.mapPos.scale) / 2;
             const ty = (250 - city.y * state.mapPos.scale) / 2;
             state.mapPos.x = tx;
             state.mapPos.y = ty;
             
             const mapSvg = document.getElementById('world-map');
-            mapSvg.style.transition = 'transform 1.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            mapSvg.style.transition = 'transform 1.2s cubic-bezier(0.4, 0, 0.2, 1)';
             updateMapTransform();
 
             storyChain.forEach((c, i) => {
